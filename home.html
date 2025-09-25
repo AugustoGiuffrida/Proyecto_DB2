@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppCatálogo - Inicio</title>
+    <!-- CSS de Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-white">
+
+    <!-- =============================================== -->
+    <!-- 1. BARRA DE NAVEGACIÓN SUPERIOR (HEADER)        -->
+    <!-- =============================================== -->
+    <!-- Contenido mayormente estático. El nombre de usuario se obtendría si hay una sesión activa. -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">AppCatálogo</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Series</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Películas</a>
+                    </li>
+                </ul>
+                <form class="d-flex" role="search">
+                    <input class="form-control me-2" type="search" placeholder="Buscar título..." aria-label="Buscar">
+                    <button class="btn btn-outline-danger" type="submit">Buscar</button>
+                </form>
+                <ul class="navbar-nav ms-lg-3">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            CineFan88 <!-- Esto vendría de la colección 'users' -->
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Mi Perfil</a></li>
+                            <li><a class="dropdown-item" href="#">Mi Lista</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Cerrar Sesión</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =============================================== -->
+    <!-- 2. SECCIÓN PRINCIPAL (HERO SECTION)             -->
+    <!-- =============================================== -->
+    <!-- Esta sección se alimenta con una única consulta a `db.media.findOne({ is_featured: true })` -->
+    <header class="container-fluid p-0 mb-5">
+        <!-- Sin CSS, no podemos poner texto sobre la imagen de fondo.
+             Así que mostramos una imagen grande y la información justo debajo. -->
+        <img src="cover/default-book-cover.jpg" class="img-fluid" alt="Póster destacado de Inception">
+        
+        <div class="container text-center mt-3">
+            <h1 class="display-4">Inception</h1>
+            <p class="lead col-lg-6 mx-auto">Un ladrón que roba secretos corporativos mediante el uso de la tecnología de compartir sueños tiene la tarea inversa de plantar una idea en la mente de un director ejecutivo.</p>
+            <div>
+                <a href="#" class="btn btn-danger btn-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+                    Ver Ahora
+                </a>
+                <a href="#" class="btn btn-outline-light btn-lg ms-2">+ Info</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- =============================================== -->
+    <!-- 3. CARRUSELES DE CONTENIDO                      -->
+    <!-- =============================================== -->
+    <!-- Cada carrusel es una consulta independiente a la colección 'media'. -->
+    <main class="container">
+
+        <!-- Carrusel 1: Tendencias de la Semana -->
+        <!-- Consulta: db.media.find().sort({ weekly_view_count: -1 }).limit(10).project(...) -->
+        <section class="mb-5">
+            <h3 class="mb-3">Tendencias de la Semana</h3>
+            <div class="d-flex flex-nowrap overflow-auto">
+                <!-- Los items se generarían dinámicamente con los resultados de la consulta -->
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image0.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image1.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image2.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image3.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image4.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image5.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image6.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image7.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image8.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+            </div>
+        </section>
+
+        <!-- Carrusel 2: Recién Añadidas -->
+        <!-- Consulta: db.media.find().sort({ createdAt: -1 }).limit(10).project(...) -->
+        <section class="mb-5">
+            <h3 class="mb-3">Recién Añadidas</h3>
+            <div class="d-flex flex-nowrap overflow-auto">
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image8.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image7.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image6.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image5.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image4.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image3.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image2.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image1.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image0.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+            </div>
+        </section>
+
+        <!-- Carrusel 3: Películas de Acción Populares -->
+        <!-- Consulta: db.media.find({ type: "Movie", genres: "Action" }).sort({ rating_avg: -1 }).limit(10).project(...) -->
+        <section class="mb-5">
+            <h3 class="mb-3">Películas de Acción Populares</h3>
+            <div class="d-flex flex-nowrap overflow-auto">
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image5.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image1.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image7.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image3.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image4.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image6.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image8.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image2.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+                <div class="me-3" style="min-width: 200px;"><a href="#"><img src="cover/image0.jpg" class="img-fluid rounded" alt="Póster"></a></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- =============================================== -->
+    <!-- 4. PIE DE PÁGINA (FOOTER)                       -->
+    <!-- =============================================== -->
+    <footer class="bg-black py-4 mt-5">
+        <div class="container text-center text-secondary">
+            <p>
+                <a href="#" class="text-secondary text-decoration-none">Acerca de</a> |
+                <a href="#" class="text-secondary text-decoration-none">Contacto</a> |
+                <a href="#" class="text-secondary text-decoration-none">Términos y Condiciones</a>
+            </p>
+            <p>&copy; 2024 CineCatálogo. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript de Bootstrap 5 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
