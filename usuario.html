@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - AppCatálogo</title>
+    <!-- CSS de Bootstrap 5 y Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <style>
+        /* Estilo para las pestañas de perfil */
+        .nav-tabs .nav-link {
+            color: white; /* Texto blanco para pestañas inactivas */
+            border-color: #495057; /* Borde gris oscuro */
+        }
+
+        /* Estilo para la pestaña activa y al pasar el cursor (hover) */
+        .nav-tabs .nav-link.active,
+        .nav-tabs .nav-link:hover {
+            color: black; /* Texto negro para la pestaña activa o en hover */
+            background-color: white; /* Fondo blanco */
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+    </style>
+</head>
+
+<body class="bg-dark text-white">
+    <!-- =============================================== -->
+    <!-- 1. BARRA DE NAVEGACIÓN (IDÉNTICA AL HOME)       -->
+    <!-- =============================================== -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1a1a1a;">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="home.html">AppCatálogo</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="home.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Series</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Películas</a>
+                    </li>
+                </ul>
+                <form class="d-flex" role="search">
+                    <input class="form-control me-2" type="search" placeholder="Buscar título..." aria-label="Buscar">
+                    <button class="btn btn-outline-danger" type="submit">Buscar</button>
+                </form>
+                <ul class="navbar-nav ms-lg-3">
+                    <li class="nav-item dropdown">
+                        <a class="btn btn-outline-danger dropdown-toggle py-1 px-3" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Menú
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end bg-dark border-secondary p-2" style="min-width: 250px;">
+                            <div class="px-2 py-2">
+                                <div class="d-flex align-items-center">
+                                    <img src="cover/user.png" class="rounded-circle me-3" alt="Foto de perfil" style="width: 50px; height: 50px;">
+                                    <div>
+                                        <div class="fw-bold text-white">CineFan88</div>
+                                        <div class="small text-muted">cinefan@email.com</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div><hr class="dropdown-divider border-secondary"></div>
+                            <div class="px-2 py-1">
+                                <a href="user-profile.html" class="btn btn-danger w-100">Ver Perfil</a>
+                            </div>
+                            <div>
+                                <a class="dropdown-item text-white text-center" href="#">Cerrar Sesión</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =============================================== -->
+    <!-- 2. CONTENIDO PRINCIPAL DEL PERFIL               -->
+    <!-- =============================================== -->
+    <main class="container my-5">
+
+        <!-- ENCABEZADO DEL PERFIL -->
+        <!-- Consulta: db.users.findOne({_id: ...}) para obtener los datos de este bloque. -->
+        <header class="d-flex align-items-center mb-5">
+            <img src="cover/user.png" class="rounded-circle border border-4 border-secondary " alt="Foto de perfil" style="width: 250px; height: 150px;">
+            <div>
+                <h1 class="display-5 fw-bold">CineFan88</h1>
+                <p class="text-muted fs-5 mb-1">cinefan@email.com</p>
+                <p class="text-muted">Miembro desde: 15 de Enero, 2022</p>
+                <button class="btn btn-outline-light">Editar Perfil</button>
+            </div>
+        </header>
+
+    
+<!-- SISTEMA DE PESTAÑAS PARA ORGANIZAR EL CONTENIDO -->
+        <ul class="nav nav-tabs nav-fill mb-4" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist-pane" type="button" role="tab">Mi Lista de Pendientes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="watched-tab" data-bs-toggle="tab" data-bs-target="#watched-pane" type="button" role="tab">Contenido Visto</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews-pane" type="button" role="tab">Mis Reseñas</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment-pane" type="button" role="tab">Cuenta y Pagos</button>
+            </li>
+        </ul>
+
+  
+
+        <!-- CONTENIDO DE LAS PESTAÑAS -->
+        <div class="tab-content" id="profileTabsContent">
+
+            <!-- Pestaña 1: Mi Lista de Pendientes -->
+            <!-- Consulta: db.media.find({_id: { $in: user.watchlist }}) -->
+            <div class="tab-pane fade show active" id="watchlist-pane" role="tabpanel">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    <!-- Ejemplo de item en la lista (se generaría un bucle aquí) -->
+                    <div class="col">
+                        <div class="card border-secondary bg-dark text-white h-100">
+                         <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
+                            <div class="row g-0">
+                                <div class="col-md-4">
+                                    <a href="#"><img src="cover/image0.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Shawshank Redemption"></a>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card-body d-flex flex-column h-100 p-3">
+                                        <h5 class="card-title fw-bold">The Shawshank Redemption</h5>
+                                        <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Tim Robbins, Morgan Freeman</p>
+                                        <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Frank Darabont</p>
+                                        <div class="d-flex align-items-center mt-auto">
+                                            <span class="text-white small fw-bold me-2">RATING</span>
+                                            <span class="badge bg-danger fs-6">9.3</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Fin del item de ejemplo -->
+                    <!-- ... más items ... -->
+                </div>
+            </div>
+
+            <!-- Pestaña 2: Contenido Visto (con sub-pestañas) -->
+            <!-- Consulta: db.media.find({_id: { $in: user.watched_list }}) y luego se filtra por 'type' -->
+            <div class="tab-pane fade" id="watched-pane" role="tabpanel">
+                <ul class="nav nav-pills mb-3" id="watchedSubTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#watched-movies" type="button">Películas Vistas</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#watched-series" type="button">Series Vistas</button>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="watched-movies">
+                    <div class="d-flex flex-nowrap overflow-auto pb-3">
+                        <!-- Card 1 -->
+                        <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
+                            <div class="row g-0">
+                                <div class="col-md-4">
+                                    <a href="#"><img src="cover/image0.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Shawshank Redemption"></a>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card-body d-flex flex-column h-100 p-3">
+                                        <h5 class="card-title fw-bold">The Shawshank Redemption</h5>
+                                        <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Tim Robbins, Morgan Freeman</p>
+                                        <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Frank Darabont</p>
+                                        <div class="d-flex align-items-center mt-auto">
+                                            <span class="text-white small fw-bold me-2">RATING</span>
+                                            <span class="badge bg-danger fs-6">9.3</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
+                            <div class="row g-0">
+                                <div class="col-md-4">
+                                    <a href="#"><img src="cover/image1.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Godfather"></a>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card-body d-flex flex-column h-100 p-3">
+                                        <h5 class="card-title fw-bold">The Godfather</h5>
+                                        <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Marlon Brando, Al Pacino</p>
+                                        <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Francis Ford Coppola</p>
+                                        <div class="d-flex align-items-center mt-auto">
+                                            <span class="text-white small fw-bold me-2">RATING</span>
+                                            <span class="badge bg-danger fs-6">9.2</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="tab-pane fade" id="watched-series">
+                        <div class="d-flex flex-nowrap overflow-auto pb-3">
+                            <!-- Card 1 -->
+                            <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
+                                <div class="row g-0">
+                                    <div class="col-md-4">
+                                        <a href="#"><img src="cover/image0.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Shawshank Redemption"></a>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body d-flex flex-column h-100 p-3">
+                                            <h5 class="card-title fw-bold">The Shawshank Redemption</h5>
+                                            <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Tim Robbins, Morgan Freeman</p>
+                                            <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Frank Darabont</p>
+                                            <div class="d-flex align-items-center mt-auto">
+                                                <span class="text-white small fw-bold me-2">RATING</span>
+                                                <span class="badge bg-danger fs-6">9.3</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2 -->
+                            <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
+                                <div class="row g-0">
+                                    <div class="col-md-4">
+                                        <a href="#"><img src="cover/image1.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Godfather"></a>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body d-flex flex-column h-100 p-3">
+                                            <h5 class="card-title fw-bold">The Godfather</h5>
+                                            <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Marlon Brando, Al Pacino</p>
+                                            <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Francis Ford Coppola</p>
+                                            <div class="d-flex align-items-center mt-auto">
+                                                <span class="text-white small fw-bold me-2">RATING</span>
+                                                <span class="badge bg-danger fs-6">9.2</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña 3: Mis Reseñas -->
+            <!-- Consulta: db.reviews.find({ user_id: ... }) -->
+            <div class="tab-pane fade" id="reviews-pane" role="tabpanel">
+                <!-- Ejemplo de reseña -->
+                <div class="card bg-secondary bg-opacity-25 border-secondary mb-3">
+                    <div class="card-header d-flex justify-content-between">
+                        <span class="fw-bold">Inception</span>
+                        <small class="text-muted">Hace 2 semanas</small>
+                    </div>
+                    <div class="card-body">
+                        <blockquote class="blockquote mb-0">
+                            <p>"Una obra maestra visual y narrativa. La complejidad de la trama te mantiene al borde del asiento."</p>
+                            <footer class="blockquote-footer text-end">Tu calificación: <cite class="text-danger fw-bold">9.0 / 10</cite></footer>
+                        </blockquote>
+                    </div>
+                </div>
+                <!-- Fin de reseña de ejemplo -->
+                <!-- ... más reseñas ... -->
+            </div>
+
+            <!-- Pestaña 4: Cuenta y Pagos -->
+            <!-- Consulta: db.users.findOne({_id: ...}) para obtener los datos de esta sección. -->
+            <div class="tab-pane fade" id="payment-pane" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Información Personal</h4>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-transparent text-white"><strong>Usuario:</strong> CineFan88</li>
+                            <li class="list-group-item bg-transparent text-white"><strong>Email:</strong> cinefan@email.com</li>
+                            <li class="list-group-item bg-transparent text-white"><strong>Tipo de Plan:</strong> Premium Anual</li>
+                        </ul>
+                        <button class="btn btn-outline-light mt-3">Cambiar Contraseña</button>
+                    </div>
+                    <div class="col-md-6 mt-4 mt-md-0">
+                        <h4>Métodos de Pago</h4>
+                        <div class="card bg-secondary bg-opacity-25 border-secondary">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-credit-card-2-front-fill fs-2 me-3"></i>
+                                    <span>Visa terminada en <strong>1234</strong></span>
+                                </div>
+                                <a href="#" class="btn btn-sm btn-outline-secondary">Eliminar</a>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger mt-3">Añadir Método de Pago</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- =============================================== -->
+    <!-- 5. PIE DE PÁGINA (IDÉNTICO AL HOME)             -->
+    <!-- =============================================== -->
+    <footer class="py-4 mt-5" style="background-color: #1a1a1a;">
+        <div class="container text-center text-secondary">
+            <p><a href="#" class="text-secondary text-decoration-none">Acerca de</a> | <a href="#" class="text-secondary text-decoration-none">Contacto</a> | <a href="#" class="text-secondary text-decoration-none">Términos y Condiciones</a></p>
+            <p>&copy; 2024 CineCatálogo. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript de Bootstrap 5 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
