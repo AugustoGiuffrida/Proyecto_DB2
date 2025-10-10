@@ -7,27 +7,26 @@
     <!-- CSS de Bootstrap 5 y Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <style>
+    <style>
         /* Estilo para las pestañas de perfil */
-        .nav-tabs .nav-link {
-            color: white; /* Texto blanco para pestañas inactivas */
-            border-color: #495057; /* Borde gris oscuro */
-        }
+        .nav-tabs .nav-link { color: white; border-color: #495057; }
+        .nav-tabs .nav-link.active, .nav-tabs .nav-link:hover { color: black; background-color: white; border-color: #dee2e6 #dee2e6 #fff; }
 
-        /* Estilo para la pestaña activa y al pasar el cursor (hover) */
-        .nav-tabs .nav-link.active,
-        .nav-tabs .nav-link:hover {
-            color: black; /* Texto negro para la pestaña activa o en hover */
-            background-color: white; /* Fondo blanco */
-            border-color: #dee2e6 #dee2e6 #fff;
+        /* Solución para el Footer pegajoso */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* El body ocupa al menos el 100% de la altura de la pantalla */
+        }
+        main {
+            flex: 1; /* El contenido principal se expande para empujar el footer hacia abajo */
         }
     </style>
 </head>
 
 <body class="bg-dark text-white">
-    <!-- =============================================== -->
-    <!-- 1. BARRA DE NAVEGACIÓN (IDÉNTICA AL HOME)       -->
-    <!-- =============================================== -->
+
+    <!-- BARRA DE NAVEGACIÓN -->
     <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1a1a1a;">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="home.html">AppCatálogo</a>
@@ -36,15 +35,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="home.html">Inicio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Series</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Películas</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="home.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Series</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Películas</a></li>
                 </ul>
                 <form class="d-flex" role="search">
                     <input class="form-control me-2" type="search" placeholder="Buscar título..." aria-label="Buscar">
@@ -58,10 +51,10 @@
                         <div class="dropdown-menu dropdown-menu-end bg-dark border-secondary p-2" style="min-width: 250px;">
                             <div class="px-2 py-2">
                                 <div class="d-flex align-items-center">
-                                    <img src="cover/user.png" class="rounded-circle me-3" alt="Foto de perfil" style="width: 50px; height: 50px;">
+                                    <img src="https://ui-avatars.com/api/?name=CineFan88&background=dc3545&color=fff&size=50" class="rounded-circle me-3" alt="Foto de perfil">
                                     <div>
                                         <div class="fw-bold text-white">CineFan88</div>
-                                        <div class="small text-muted">cinefan@email.com</div>
+                                        <div class="small text-white">cinefan@email.com</div>
                                     </div>
                                 </div>
                             </div>
@@ -79,6 +72,7 @@
         </div>
     </nav>
 
+
     <!-- =============================================== -->
     <!-- 2. CONTENIDO PRINCIPAL DEL PERFIL               -->
     <!-- =============================================== -->
@@ -86,13 +80,41 @@
 
         <!-- ENCABEZADO DEL PERFIL -->
         <!-- Consulta: db.users.findOne({_id: ...}) para obtener los datos de este bloque. -->
-        <header class="d-flex align-items-center mb-5">
-            <img src="cover/user.png" class="rounded-circle border border-4 border-secondary " alt="Foto de perfil" style="width: 250px; height: 150px;">
-            <div>
-                <h1 class="display-5 fw-bold">CineFan88</h1>
-                <p class="text-muted fs-5 mb-1">cinefan@email.com</p>
-                <p class="text-muted">Miembro desde: 15 de Enero, 2022</p>
-                <button class="btn btn-outline-light">Editar Perfil</button>
+        <header class="row align-items-center mb-5 p-4 rounded-3" style="background-color: #1a1a1a;">
+            <!-- Columna de la Imagen de Perfil -->
+            <div class="col-md-3 text-center text-md-start">
+                <img src="https://ui-avatars.com/api/?name=CineFan88&background=dc3545&color=fff&size=150" class="rounded-circle border border-4 border-secondary" alt="Foto de perfil">
+            </div>
+
+            <!-- Columna de la Información del Usuario -->
+            <div class="col-md-9">
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
+                    <div>
+                        <h1 class="display-5 fw-bold text-white">CineFan88</h1>
+                        <p class="text-white fs-5 mb-1">cinefan@email.com</p>
+                    </div>
+                    <button class="btn btn-outline-light mt-3 mt-md-0">
+                        <i class="bi bi-pencil-fill me-2"></i>Editar Perfil
+                    </button>
+                </div>
+                
+                <hr class="border-secondary">
+
+                <!-- Fila de Datos Adicionales -->
+                <div class="row text-center text-md-start">
+                    <div class="col-md-4">
+                        <h6 class="text-white text-uppercase small">Miembro desde</h6>
+                        <p class="fs-5 text-white">15 de Enero, 2022</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-white text-uppercase small">Géneros Favoritos</h6>
+                        <p class="fs-5 text-white">Sci-Fi, Drama, Thriller</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-white text-uppercase small">Contenido Visto</h6>
+                        <p class="fs-5 text-white">142 Películas / 38 Series</p>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -115,192 +137,258 @@
 
   
 
-        <!-- CONTENIDO DE LAS PESTAÑAS -->
+        <!-- =============================================== -->
+        <!-- 3. CONTENIDO DE LAS PESTAÑAS - REDISEÑADO     -->
+        <!-- =============================================== -->
         <div class="tab-content" id="profileTabsContent">
 
             <!-- Pestaña 1: Mi Lista de Pendientes -->
-            <!-- Consulta: db.media.find({_id: { $in: user.watchlist }}) -->
             <div class="tab-pane fade show active" id="watchlist-pane" role="tabpanel">
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                    <!-- Ejemplo de item en la lista (se generaría un bucle aquí) -->
-                    <div class="col">
-                        <div class="card border-secondary bg-dark text-white h-100">
-                         <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
-                            <div class="row g-0">
-                                <div class="col-md-4">
-                                    <a href="#"><img src="cover/image0.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Shawshank Redemption"></a>
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="card-body d-flex flex-column h-100 p-3">
-                                        <h5 class="card-title fw-bold">The Shawshank Redemption</h5>
-                                        <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Tim Robbins, Morgan Freeman</p>
-                                        <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Frank Darabont</p>
-                                        <div class="d-flex align-items-center mt-auto">
-                                            <span class="text-white small fw-bold me-2">RATING</span>
-                                            <span class="badge bg-danger fs-6">9.3</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Fin del item de ejemplo -->
-                    <!-- ... más items ... -->
-                </div>
-            </div>
-
-            <!-- Pestaña 2: Contenido Visto (con sub-pestañas) -->
-            <!-- Consulta: db.media.find({_id: { $in: user.watched_list }}) y luego se filtra por 'type' -->
-            <div class="tab-pane fade" id="watched-pane" role="tabpanel">
-                <ul class="nav nav-pills mb-3" id="watchedSubTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#watched-movies" type="button">Películas Vistas</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#watched-series" type="button">Series Vistas</button>
-                    </li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="watched-movies">
-                    <div class="d-flex flex-nowrap overflow-auto pb-3">
-                        <!-- Card 1 -->
-                        <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
-                            <div class="row g-0">
-                                <div class="col-md-4">
-                                    <a href="#"><img src="cover/image0.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Shawshank Redemption"></a>
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="card-body d-flex flex-column h-100 p-3">
-                                        <h5 class="card-title fw-bold">The Shawshank Redemption</h5>
-                                        <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Tim Robbins, Morgan Freeman</p>
-                                        <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Frank Darabont</p>
-                                        <div class="d-flex align-items-center mt-auto">
-                                            <span class="text-white small fw-bold me-2">RATING</span>
-                                            <span class="badge bg-danger fs-6">9.3</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card 2 -->
-                        <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
-                            <div class="row g-0">
-                                <div class="col-md-4">
-                                    <a href="#"><img src="cover/image1.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Godfather"></a>
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="card-body d-flex flex-column h-100 p-3">
-                                        <h5 class="card-title fw-bold">The Godfather</h5>
-                                        <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Marlon Brando, Al Pacino</p>
-                                        <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Francis Ford Coppola</p>
-                                        <div class="d-flex align-items-center mt-auto">
-                                            <span class="text-white small fw-bold me-2">RATING</span>
-                                            <span class="badge bg-danger fs-6">9.2</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="tab-pane fade" id="watched-series">
-                        <div class="d-flex flex-nowrap overflow-auto pb-3">
-                            <!-- Card 1 -->
-                            <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
-                                <div class="row g-0">
-                                    <div class="col-md-4">
-                                        <a href="#"><img src="cover/image0.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Shawshank Redemption"></a>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <div class="card-body d-flex flex-column h-100 p-3">
-                                            <h5 class="card-title fw-bold">The Shawshank Redemption</h5>
-                                            <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Tim Robbins, Morgan Freeman</p>
-                                            <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Frank Darabont</p>
-                                            <div class="d-flex align-items-center mt-auto">
-                                                <span class="text-white small fw-bold me-2">RATING</span>
-                                                <span class="badge bg-danger fs-6">9.3</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card 2 -->
-                            <div class="card border-secondary me-3 bg-dark text-white" style="min-width: 450px; max-width: 450px;">
-                                <div class="row g-0">
-                                    <div class="col-md-4">
-                                        <a href="#"><img src="cover/image1.jpg" class="img-fluid rounded-start h-100" alt="Póster de The Godfather"></a>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <div class="card-body d-flex flex-column h-100 p-3">
-                                            <h5 class="card-title fw-bold">The Godfather</h5>
-                                            <p class="card-text small text-truncate mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people-fill me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Marlon Brando, Al Pacino</p>
-                                            <p class="card-text small text-truncate mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-video2 me-1" viewBox="0 0 16 16"><path d="M10 9.055a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5z"/><path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm2.5 4a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1zm.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m-2 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m2-2a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>Francis Ford Coppola</p>
-                                            <div class="d-flex align-items-center mt-auto">
-                                                <span class="text-white small fw-bold me-2">RATING</span>
-                                                <span class="badge bg-danger fs-6">9.2</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pestaña 3: Mis Reseñas -->
-            <!-- Consulta: db.reviews.find({ user_id: ... }) -->
-            <div class="tab-pane fade" id="reviews-pane" role="tabpanel">
-                <!-- Ejemplo de reseña -->
-                <div class="card bg-secondary bg-opacity-25 border-secondary mb-3">
-                    <div class="card-header d-flex justify-content-between">
-                        <span class="fw-bold">Inception</span>
-                        <small class="text-muted">Hace 2 semanas</small>
+                <div class="card border-secondary" style="background-color: #1a1a1a;">
+                    <div class="card-header bg-transparent border-secondary">
+                        <h4 class="mb-0 text-white"><i class="bi bi-bookmark-fill me-2"></i>Mi Lista de Pendientes</h4>
                     </div>
                     <div class="card-body">
-                        <blockquote class="blockquote mb-0">
-                            <p>"Una obra maestra visual y narrativa. La complejidad de la trama te mantiene al borde del asiento."</p>
-                            <footer class="blockquote-footer text-end">Tu calificación: <cite class="text-danger fw-bold">9.0 / 10</cite></footer>
-                        </blockquote>
+                        <ul class="list-group list-group-flush">
+                            <!-- Ejemplo de item 1 -->
+                            <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <img src="cover/image3.jpg" alt="Pulp Fiction" style="width: 50px; height: 75px;" class="rounded me-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Pulp Fiction</h6>
+                                        <small class="text-white">Quentin Tarantino</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i></button>
+                            </li>
+                            <!-- Ejemplo de item 2 -->
+                            <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <img src="cover/image8.jpg" alt="Interstellar" style="width: 50px; height: 75px;" class="rounded me-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Interstellar</h6>
+                                        <small class="text-white">Christopher Nolan</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i></button>
+                            </li>
+                            <!-- Ejemplo de item 1 -->
+                            <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <img src="cover/image3.jpg" alt="Pulp Fiction" style="width: 50px; height: 75px;" class="rounded me-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-0">Pulp Fiction</h6>
+                                        <small class="text-white">Quentin Tarantino</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i></button>
+                            </li> 
+                        </ul>
                     </div>
                 </div>
-                <!-- Fin de reseña de ejemplo -->
-                <!-- ... más reseñas ... -->
             </div>
 
-            <!-- Pestaña 4: Cuenta y Pagos -->
-            <!-- Consulta: db.users.findOne({_id: ...}) para obtener los datos de esta sección. -->
-            <div class="tab-pane fade" id="payment-pane" role="tabpanel">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h4>Información Personal</h4>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item bg-transparent text-white"><strong>Usuario:</strong> CineFan88</li>
-                            <li class="list-group-item bg-transparent text-white"><strong>Email:</strong> cinefan@email.com</li>
-                            <li class="list-group-item bg-transparent text-white"><strong>Tipo de Plan:</strong> Premium Anual</li>
-                        </ul>
-                        <button class="btn btn-outline-light mt-3">Cambiar Contraseña</button>
+            <!-- Pestaña 2: Contenido Visto -->
+            <div class="tab-pane fade" id="watched-pane" role="tabpanel">
+                <div class="card border-secondary" style="background-color: #1a1a1a;">
+                    <div class="card-header bg-transparent border-secondary">
+                        <h4 class="mb-0 text-white"><i class="bi bi-check-circle-fill me-2"></i>Contenido Visto</h4>
                     </div>
-                    <div class="col-md-6 mt-4 mt-md-0">
-                        <h4>Métodos de Pago</h4>
-                        <div class="card bg-secondary bg-opacity-25 border-secondary">
-                            <div class="card-body d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="bi bi-credit-card-2-front-fill fs-2 me-3"></i>
-                                    <span>Visa terminada en <strong>1234</strong></span>
-                                </div>
-                                <a href="#" class="btn btn-sm btn-outline-secondary">Eliminar</a>
+                    <div class="card-body">
+                        <ul class="nav nav-pills mb-3" id="watchedSubTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#watched-movies" type="button">Películas Vistas (142)</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#watched-series" type="button">Series Vistas (38)</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="watched-movies">
+                                <ul class="list-group list-group-flush">
+                                    <!-- Ejemplo Película Vista -->
+                                    <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <img src="cover/image2.jpg" alt="The Dark Knight" style="width: 50px; height: 75px;" class="rounded me-3">
+                                            <div>
+                                                <h6 class="fw-bold mb-0">The Dark Knight</h6>
+                                                <small class="text-white">Visto el 10 de Octubre, 2023</small>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-danger">9.0 / 10</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="tab-pane fade" id="watched-series">
+                                <ul class="list-group list-group-flush">
+                                    <!-- Ejemplo Serie Vista -->
+                                    <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <img src="cover/image5.jpg" alt="Breaking Bad" style="width: 50px; height: 75px;" class="rounded me-3">
+                                            <div>
+                                                <h6 class="fw-bold mb-0">Breaking Bad</h6>
+                                                <small class="text-white">Visto el 5 de Septiembre, 2023</small>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-danger">9.5 / 10</span>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
-                        <button class="btn btn-danger mt-3">Añadir Método de Pago</button>
                     </div>
                 </div>
             </div>
 
-        </div>
+    
+<!-- Pestaña 3: Mis Reseñas -->
+            <div class="tab-pane fade" id="reviews-pane" role="tabpanel">
+                <div class="card border-secondary" style="background-color: #1a1a1a;">
+                    <div class="card-header bg-transparent border-secondary">
+                        <h4 class="mb-0 text-white"><i class="bi bi-chat-square-quote-fill me-2"></i>Mis Reseñas</h4>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Reseña de ejemplo 1 -->
+                        <!-- CORRECCIÓN: Cambiado 'bg-dark' por 'bg-black' y añadido 'text-white' al párrafo -->
+                        <div class="card  border-secondary mb-3" style="background-color: #1a1a1a;">
+                            <div class="card-header d-flex justify-content-between bg-transparent border-secondary">
+                                <span class="fw-bold text-white fs-5">Inception</span>
+                                <small class="text-white align-self-center">Hace 2 semanas</small>
+                            </div>
+                            <div class="card-body">
+                                <blockquote class="blockquote mb-0">
+                                    <p class="text-white">"Una obra maestra visual y narrativa. La complejidad de la trama te mantiene al borde del asiento."</p>
+                                    <footer class="blockquote-footer text-end text-white-50">Tu calificación: <cite class="text-danger fw-bold">9.0 / 10</cite></footer>
+                                </blockquote>
+                            </div>
+                        </div>
+
+                        <!-- Reseña de ejemplo 2 -->
+                        <div class="card  border-secondary mb-3" style="background-color: #1a1a1a;">
+                            <div class="card-header d-flex justify-content-between bg-transparent border-secondary">
+                                <span class="fw-bold text-white fs-5">Breaking Bad</span>
+                                <small class="text-white align-self-center">Hace 1 mes</small>
+                            </div>
+                            <div class="card-body">
+                                <blockquote class="blockquote mb-0">
+                                    <p class="text-white">"Simplemente la mejor serie que he visto. El desarrollo de personajes es impecable."</p>
+                                    <footer class="blockquote-footer text-end text-white-50">Tu calificación: <cite class="text-danger fw-bold">10 / 10</cite></footer>
+                                </blockquote>
+                            </div>
+                        </div>
+
+                        <!-- Reseña de ejemplo 3 -->
+                        <div class="card  border-secondary mb-3" style="background-color: #1a1a1a;">
+                            <div class="card-header d-flex justify-content-between bg-transparent border-secondary">
+                                <span class="fw-bold text-white fs-5">Parasite</span>
+                                <small class="text-white align-self-center">Hace 3 meses</small>
+                            </div>
+                            <div class="card-body">
+                                <blockquote class="blockquote mb-0">
+                                    <p class="text-white">"Una crítica social brillante envuelta en un thriller. Te deja pensando días después de haberla visto."</p>
+                                    <footer class="blockquote-footer text-end text-white-50">Tu calificación: <cite class="text-danger fw-bold">8.5 / 10</cite></footer>
+                                </blockquote>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+  
+            <!-- Pestaña 4: Cuenta y Pagos - DISEÑO MEJORADO -->
+            <!-- Consulta: db.users.findOne({_id: ...}) para obtener los datos de esta sección. -->
+            <div class="tab-pane fade" id="payment-pane" role="tabpanel">
+                <div class="row g-4">
+
+                    <!-- Columna Izquierda: Información Personal y Cuenta -->
+                    <div class="col-lg-7">
+                        <div class="card h-100 border-secondary" style="background-color: #1a1a1a;">
+                            <div class="card-header bg-transparent border-secondary">
+                                <h4 class="mb-0 text-white"><i class="bi bi-person-badge-fill me-2"></i>Información Personal</h4>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-white border-secondary">
+                                        <div><i class="bi bi-person-circle me-2 text-muted"></i>Nombre de Usuario</div>
+                                        <span class="fw-bold">CineFan88</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-white border-secondary">
+                                        <div><i class="bi bi-envelope-fill me-2 text-muted"></i>Email</div>
+                                        <span class="fw-bold">cinefan@email.com</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-white border-secondary">
+                                        <div><i class="bi bi-cake2-fill me-2 text-muted"></i>Fecha de Nacimiento</div>
+                                        <span class="fw-bold">25 de Mayo, 1988 (36 años)</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-white border-secondary">
+                                        <div><i class="bi bi-geo-alt-fill me-2 text-muted"></i>País</div>
+                                        <span class="fw-bold">Argentina</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-footer bg-transparent border-secondary text-end">
+                                <button class="btn btn-outline-light me-2">Cambiar Contraseña</button>
+                                <button class="btn btn-outline-danger">Eliminar Cuenta</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Suscripción y Métodos de Pago -->
+                    <div class="col-lg-5">
+                        <!-- Tarjeta de Suscripción -->
+                        <div class="card h-100 border-secondary" style="background-color: #1a1a1a;">
+                            <div class="card-header bg-transparent border-secondary">
+                                <h4 class="mb-0 text-white"><i class="bi bi-star-fill me-2"></i>Suscripción</h4>
+                            </div>
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-warning">PLAN PREMIUM</h5>
+                                <p class="card-text text-white">Tu suscripción se renueva el 20 de Diciembre, 2024.</p>
+                                <a href="#" class="btn btn-outline-warning">Administrar Suscripción</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fila de Métodos de Pago (debajo) -->
+                    <div class="col-12 mt-4">
+                         <div class="card border-secondary" style="background-color: #1a1a1a;">
+                            <div class="card-header bg-transparent border-secondary">
+                                <h4 class="mb-0 text-white"><i class="bi bi-wallet-fill me-2"></i>Métodos de Pago</h4>
+                            </div>
+                             <div class="card-body">
+                                <!-- Método de pago 1 -->
+                                <div class="d-flex justify-content-between align-items-center p-3 rounded mb-2" style="background-color: rgba(255, 255, 255, 0.05);">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-credit-card-2-front-fill fs-2 me-3 text-info"></i>
+                                        <div>
+                                            <div class="fw-bold text-white">Visa terminada en 1234</div>
+                                            <div class="small text-white">Expira 12/26</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash-fill"></i></button>
+                                </div>
+                                <!-- Método de pago 2 -->
+                                <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background-color: rgba(255, 255, 255, 0.05);">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-paypal fs-2 me-3 text-primary"></i>
+                                        <div>
+                                            <div class="fw-bold text-white">PayPal</div>
+                                            <div class="small text-white">cinefan@email.com</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash-fill"></i></button>
+                                </div>
+                             </div>
+                             <div class="card-footer bg-transparent border-secondary">
+                                 <button class="btn btn-danger w-100"><i class="bi bi-plus-circle-fill me-2"></i>Añadir Nuevo Método de Pago</button>
+                             </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+  
     </main>
 
     <!-- =============================================== -->
