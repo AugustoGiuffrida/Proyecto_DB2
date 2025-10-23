@@ -2,7 +2,7 @@ import pymongo
 from pymongo import MongoClient
 from faker import Faker
 import random
-from datetime import datetime, time # <-- 1. IMPORTACIÓN AÑADIDA
+from datetime import datetime, time
 
 # --- CONFIGURACIÓN ---
 NUM_USUARIOS = 100
@@ -51,7 +51,6 @@ def poblar_base_de_datos():
             email = fake.email()
             avatar_url = f"https://ui-avatars.com/api/?name={username.replace(' ', '+')}&background=random"
             
-            # --- 2. AQUÍ ESTÁ EL CAMBIO ---
             # Generamos el 'date'
             birth_date_obj = fake.date_of_birth(minimum_age=16, maximum_age=70)
             # Lo convertimos a 'datetime' combinándolo con la medianoche (time.min)
@@ -186,6 +185,43 @@ def poblar_base_de_datos():
                 }
             )
         print(f"Se actualizaron las listas de {len(inserted_user_ids)} usuarios.")
+
+        
+        # ===============================================
+        # --- 6. CREAR ÍNDICES (SECCIÓN NUEVA) ---
+        # ===============================================
+        print("\nCreando índices para optimizar las consultas...")
+
+        # --- Índices para 'media' ---
+        print("Creando índices para 'media'...")
+        media_col.create_index([("title", "text")], name="media_title")
+        media_col.create_index([("weekly_view_count", -1)], name="media_weekly_view_count")
+        media_col.create_index([("createdAt", -1)], name="media_createdAt")
+        media_col.create_index(
+            [("genres", 1), ("type", 1), ("rating_avg", -1)],
+            name="media_compound_filter"
+        )
+
+        # --- Índices para 'users' ---
+        # Nota: Añadimos unique=True para asegurar que no haya emails o usernames duplicados.
+        print("Creando índices para 'users'...")
+        users_col.create_index([("email", 1)], name="user_email", unique=True)
+        users_col.create_index([("username", 1)], name="user_name", unique=True)
+
+        # --- Índices para 'reviews' ---
+        print("Creando índices para 'reviews'...")
+        reviews_col.create_index(
+            [("media_id", 1), ("createdAt", -1)],
+            name="review_media"
+        )
+        reviews_col.create_index(
+            [("user_id", 1), ("createdAt", -1)],
+            name="review_user"
+        )
+        
+        print("Índices creados exitosamente.")
+        
+        # -----------------------------------------------
 
         print("\n¡Carga masiva de datos completada exitosamente!")
 
