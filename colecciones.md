@@ -14,7 +14,7 @@ El Patrón Polimórfico es usar una sola colección para guardar documentos que 
 
 #### Estructura del Documento `media`:
 
-```json
+```javascript
 {
   "_id": ObjectId("..."),
   "title": "Inception",
@@ -89,7 +89,7 @@ Las reseñas de los usuarios se colocaron en una coleccion aparte por las siguie
 
 #### Estructura del Documento `users`:
 
-```json
+```javascript
 {
   "_id": ObjectId("..."),
   "username": "CineFan88",
@@ -154,7 +154,7 @@ Esta colección es un ejemplo clásico de una relación "uno a muchos" donde el 
 
 #### Estructura del Documento `reviews`:
 
-```json
+```javascript
 {
   "_id": ObjectId("..."),
   
