@@ -70,7 +70,7 @@ db.media.aggregate([
 Esta consulta obtiene todos los datos principales del documento del usuario.
 
 ```javascript
-db.users.findOne({ _id: ObjectId("63f8b4a9e8d4b8f3d8a9f8e2") })
+db.users.findOne({ _id: ObjectId("69016b295d0cf70c757ad50e") })
 ```
 
 **Campos usados:** `username`, `email`, `createdAt`, `preferences.favorite_genres`, `personal_info`, `subscription`, `payment_methods`, `watchlist`, `watched_list`.
@@ -84,7 +84,7 @@ Necesitas obtener el array `watchlist` del resultado de la Consulta 1 para usarl
 ```javascript
 db.users.aggregate([
   {
-    $match: { _id: ObjectId("68f9780bb60b0295038c6a57") }
+    $match: { _id: ObjectId("69016b295d0cf70c757ad50e") }
   },
   {
     $unwind: "$watchlist" 
@@ -121,7 +121,7 @@ Similar a la watchlist, necesitas obtener el array `watched_list` del resultado 
 ```javascript
 db.users.aggregate([
   {
-    $match: { _id: ObjectId("68f9780bb60b0295038c6a57") }
+    $match: { _id: ObjectId("69016b295d0cf70c757ad50e") }
   },
   {
     $unwind: "$watched_list" 
@@ -159,7 +159,7 @@ Esta consulta combina datos de `reviews` y `media` usando el `_id` del usuario d
 ```javascript
 db.reviews.aggregate([
   {
-    $match: { user_id: ObjectId("68f9780bb60b0295038c6a57") }
+    $match: { user_id: ObjectId("69016b295d0cf70c757ad50e") }
   },
   {
     $sort: { createdAt: -1 }
@@ -191,7 +191,7 @@ Imagina que tienes un documento de usuario como este (simplificado):
 ```javascript
 // Documento ANTES de $unwind
 {
-  _id: ObjectId("68f9780bb60b0295038c6a57"),
+  _id: ObjectId("69016b295d0cf70c757ad50e"),
   username: "CineFan88",
   watchlist: [ // <-- Un array
     ObjectId("media_id_1"),
@@ -208,21 +208,21 @@ Así se vería la salida **DESPUÉS** de `{ $unwind: "$watchlist" }`:
 ```javascript
 // Documento 1 (Salida)
 {
-  _id: ObjectId("68f9780bb60b0295038c6a57"),
+  _id: ObjectId("69016b295d0cf70c757ad50e"),
   username: "CineFan88",
   watchlist: ObjectId("media_id_1") // <-- Ahora es un solo valor
 }
 
 // Documento 2 (Salida)
 {
-  _id: ObjectId("68f9780bb60b0295038c6a57"),
+  _id: ObjectId("69016b295d0cf70c757ad50e"),
   username: "CineFan88",
   watchlist: ObjectId("media_id_2") // <-- Ahora es un solo valor
 }
 
 // Documento 3 (Salida)
 {
-  _id: ObjectId("68f9780bb60b0295038c6a57"),
+  _id: ObjectId("69016b295d0cf70c757ad50e"),
   username: "CineFan88",
   watchlist: ObjectId("media_id_3") // <-- Ahora es un solo valor
 }
@@ -244,7 +244,7 @@ Esta vista carga la información detallada de un item específico (`media`) y lu
 Esta sección muestra los detalles completos del item seleccionado.
 
 ```javascript
-db.media.findOne({ _id: ObjectId("68f9780bb60b0295038c6b00") })
+db.media.findOne({ _id: ObjectId("69016b295d0cf70c757ad572") })
 ```
 
 -----
@@ -328,4 +328,30 @@ db.users.aggregate([
   * **`$ne`**: Significa "Not Equal" (no igual a).
   * Nota: Usamos comillas (`"personal_info.country"`) para acceder al campo anidado.
 
------
+### 3\. Añadir elementos a un array
+
+```javascript
+db.users.updateOne(
+  { _id: ObjectId("69016b295d0cf70c757ad50e") },
+  {
+    $push: {
+      "preferences.favorite_genres": {
+        $each: ["Action", "Drama", "Sci-Fi", "Thriller"]
+      }
+    }
+  }
+)
+```
+
+### 4\. Asiganar valor a una clave
+
+```javascript
+db.users.updateOne(
+  { _id: ObjectId("69016b295d0cf70c757ad50e") },
+  {
+    $set: {
+      "personal_info.country": "Chile"
+    }
+  }
+)
+```
