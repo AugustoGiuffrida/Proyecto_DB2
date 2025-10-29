@@ -343,7 +343,7 @@ db.users.updateOne(
 )
 ```
 
-### 4\. Asiganar valor a una clave
+### 4\. Asignar valor a una clave
 
 ```javascript
 db.users.updateOne(
