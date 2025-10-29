@@ -213,3 +213,76 @@ Este es el comando más importante para optimizar. Te muestra *cómo* MongoDB ej
 ```bash
 db.media.find( { genres: "Sci-Fi" } ).explain("executionStats")
 ```
+
+## Backups con `mongodump`
+
+`mongodump` exporta el contenido de tu base de datos a archivos en formato BSON (Binary JSON), que es el formato interno de MongoDB.
+
+### 1. Backup de una Base de Datos Específica
+
+Este es el caso más común. Si tu base de datos se llama `MiCatalogo`:
+
+```bash
+mongodump --db MiCatalogo --out ./backup_MiCatalogo
+```
+
+* **`mongodump`**: El comando para iniciar el backup.
+* **`--db MiCatalogo`**: Especifica la base de datos que quieres respaldar.
+* **`--out ./backup_MiCatalogo`**: Especifica la carpeta donde se guardarán los archivos del backup.
+  Si la carpeta no existe, la creará. `./` significa el directorio actual.
+
+Dentro de la carpeta `backup_MiCatalogo`, encontrarás una subcarpeta llamada `MiCatalogo` que contendrá archivos `.bson` por cada colección (`media.bson`, `users.bson`, `reviews.bson`) y un archivo de metadatos (`.metadata.json`).
+
+### 2. Backup de una Colección Específica
+
+Si solo necesitas respaldar, por ejemplo, la colección `users` de la base de datos `MiCatalogo`:
+
+```bash
+mongodump --db MiCatalogo --collection users --out ./backup_solo_users
+```
+
+* **`--collection users`**: Especifica la colección a respaldar.
+
+### 3. Backup de Todas las Bases de Datos
+
+Si quieres respaldar todas las bases de datos de tu servidor MongoDB (¡cuidado, puede ocupar mucho espacio!):
+
+```bash
+mongodump --out ./backup_completo
+```
+
+* Al no especificar `--db`, `mongodump` respalda todo.
+  Se crearán subcarpetas para cada base de datos dentro de `backup_completo`.
+
+---
+
+## Restaurando Backups con `mongorestore`
+
+`mongorestore` toma los archivos BSON creados por `mongodump` y los importa de nuevo a un servidor MongoDB.
+
+### 1. Restaurar desde una Carpeta de Backup
+
+Si tienes la carpeta `backup_MiCatalogo` creada anteriormente y quieres restaurar la base de datos `MiCatalogo`:
+
+```bash
+mongorestore --db MiCatalogo ./backup_MiCatalogo/MiCatalogo/
+```
+
+* **`mongorestore`**: El comando para iniciar la restauración.
+* **`--db MiCatalogo`**: Especifica a qué base de datos quieres restaurar la información.
+  (Puede ser un nombre diferente al original si quieres).
+* **`./backup_MiCatalogo/MiCatalogo/`**: La **ruta a la carpeta que contiene los archivos `.bson`**
+  (no la carpeta `--out` principal, sino la subcarpeta con el nombre de la DB).
+
+### 2. Restaurar Todas las Bases de Datos desde una Carpeta
+
+Si hiciste un backup completo con `mongodump --out ./backup_completo`:
+
+```bash
+mongorestore ./backup_completo/
+```
+
+* Al no especificar `--db`, `mongorestore` intentará restaurar todas las bases de datos encontradas en la carpeta.
+
+
+
