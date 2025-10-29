@@ -19,13 +19,13 @@ Este carrusel muestra los elementos más vistos semanalmente. Se ordena por `wee
 
 ```javascript
 // Busca los 10 items con mayor weekly_view_count
-db.media.find()
-  .sort({ weekly_view_count: -1 }) // -1 para orden descendente
-  .limit(10)
-  .project({ title: 1, poster_image: 1, director: 1, main_cast: 1, rating_avg: 1, _id: 0 })
+db.media.aggregate([
+  { $sort: { weekly_view_count: -1 } },
+  { $limit: 10 },
+  { $project: { title: 1, poster_image: 1, director: 1, main_cast: 1, rating_avg: 1, _id: 0}}])
 ```
 
-  * **`.sort({ weekly_view_count: -1 })`**: Ordena los resultados, mostrando primero los que tienen el mayor número de vistas semanales.
+
   * **`.limit(10)`**: Restringe el resultado a los 10 primeros documentos.
   * **`.project({...})` (Opcional pero recomendado)**: Selecciona solo los campos que realmente necesitas mostrar en las *cards* del carrusel (título, póster, director, elenco, rating). Esto hace la consulta más eficiente al transferir menos datos. `_id: 0` excluye el campo `_id`.
 
@@ -37,10 +37,10 @@ Este carrusel muestra los últimos elementos añadidos a la colección. Se orden
 
 ```javascript
 // Busca los 10 items más recientes
-db.media.find()
-  .sort({ createdAt: -1 }) // -1 para orden descendente (más nuevo primero)
-  .limit(10)
-  .project({ title: 1, poster_image: 1, director: 1, main_cast: 1, rating_avg: 1, _id: 0 })
+db.media.aggregate([
+  { $sort: { createdAt: -1 } },
+  { $limit: 10 },
+  { $project: { title: 1, poster_image: 1, director: 1, main_cast: 1, rating_avg: 1, _id: 0}}])
 ```
 
   * **`.sort({ createdAt: -1 })`**: Ordena los resultados por la fecha de creación, mostrando primero los más recientes.
@@ -53,15 +53,13 @@ Este carrusel filtra por tipo "Movie" y género "Action", ordenando por la calif
 
 ```javascript
 // Busca las 10 películas de acción con mejor rating
-db.media.find({ type: "Movie", genres: "Action" })
-  .sort({ rating_avg: -1 }) // -1 para orden descendente (mejor rating primero)
-  .limit(10)
-  .project({ title: 1, poster_image: 1, director: 1, main_cast: 1, rating_avg: 1, _id: 0 })
+db.media.aggregate([
+  { $match: { type: "Movie", genres: "Action" } },
+  { $sort: { rating_avg: -1 } },
+  { $limit: 10 },
+  { $project: { title: 1, poster_image: 1, director: 1, main_cast: 1, rating_avg: 1, _id: 0}}])
 ```
 
-  * **`find({ type: "Movie", genres: "Action" })`**: Filtra los documentos para que solo incluya aquellos cuyo `type` sea "Movie" y cuyo array `genres` contenga el valor "Action". MongoDB busca automáticamente dentro del array `genres`.
-
-¡De acuerdo\! Entiendo que prefieres ver las consultas directamente sin usar variables intermedias. Aquí tienes las consultas para `mongosh` ajustadas para la interfaz `usuario.html`, asumiendo que el `_id` del usuario es `ObjectId("63f8b4a9e8d4b8f3d8a9f8e2")`.
 
 -----
 
@@ -249,8 +247,6 @@ Esta sección muestra los detalles completos del item seleccionado.
 db.media.findOne({ _id: ObjectId("68f9780bb60b0295038c6b00") })
 ```
 
-  * **`findOne({ _id: ... })`**: Recupera el documento completo de la colección `media` que coincide con el `_id` proporcionado. Esto incluye título, póster, sinopsis, año, géneros, rating promedio y los datos embebidos del director y elenco principal (`main_cast`), necesarios para llenar toda la cabecera (`<header>`) de la página.
-
 -----
 
 ### 2\. Sección de Reseñas de Usuarios
@@ -258,15 +254,78 @@ db.media.findOne({ _id: ObjectId("68f9780bb60b0295038c6b00") })
 Esta sección muestra la lista de reseñas dejadas por los usuarios para ese item de `media`.
 
 ```javascript
-db.reviews.find(
-  { media_id: ObjectId("68f9780bb60b0295038c6b00") }
-).sort(
-  { createdAt: -1 }
-)
+db.reviews.aggregate([
+  { $match: { media_id: ObjectId("69016b295d0cf70c757ad572") } },
+  { $sort: { createdAt: -1 } },
+  { $project: {
+      _id: 1,
+      user_info: 1, 
+      rating: 1,
+      comment: 1,
+      createdAt: 1
+    }
+  }
+])
 ```
 
-  * **`find({ media_id: ... })`**: Busca todos los documentos en la colección `reviews` que correspondan al `media_id` del item que se está mostrando.
-  * **`.sort({ createdAt: -1 })`**: Ordena los resultados por el campo `createdAt` en orden descendente (`-1`), asegurando que las reseñas más nuevas aparezcan primero en la lista.
-  * **Nota:** Gracias a que el campo `user_info` (con `username` y `avatar_url`) está embebido en cada reseña (denormalización), esta consulta ya trae todo lo necesario para mostrar cada tarjeta de reseña sin necesidad de hacer un `$lookup` adicional a la colección `users`.
+
+-----
+
+## 🗂️ Consultas Adicionales (Filtrado y Condicionales)
+
+### 1\. Filtrado con `$gte` (mayor o igual) y `$lte` (menor o igual)
+
+**Objetivo:** Buscar películas (`"Movie"`) que se consideran clásicos modernos (lanzadas entre 1990 y 1999) y que tengan una calificación alta (mayor o igual a 8.5).
+
+```javascript
+// Busca películas de los 90 con rating >= 8.5
+db.media.aggregate([
+  {
+    $match: {
+      type: "Movie",
+      release_year: { $gte: 1990, $lte: 1999 },
+      rating_avg: { $gte: 8.5 }
+    }
+  },
+  {
+    $project: {
+      title: 1,
+      release_year: 1,
+      rating_avg: 1,
+      _id: 0
+    }
+  }
+])
+```
+
+  * **`$gte`**: Significa "Greater Than or Equal" (mayor o igual que).
+  * **`$lte`**: Significa "Less Than or Equal" (menor o igual que).
+  * Al poner ambos en el campo `release_year`, creamos un filtro de rango.
+
+-----
+
+### 2\. Filtrado con `$ne` (no igual a)
+
+**Objetivo:** Buscar usuarios que **no** sean de un país específico (ej. "Argentina") para ver cuántos usuarios internacionales tienes.
+
+```javascript
+db.users.aggregate([
+  {
+    $match: {
+      "personal_info.country": { $ne: "Argentina" }
+    }
+  },
+  {
+    $project: {
+      username: 1,
+      "personal_info.country": 1,
+      _id: 0
+    }
+  }
+])
+```
+
+  * **`$ne`**: Significa "Not Equal" (no igual a).
+  * Nota: Usamos comillas (`"personal_info.country"`) para acceder al campo anidado.
 
 -----
