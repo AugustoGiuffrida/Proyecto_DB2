@@ -231,19 +231,19 @@ DB.reviews = [
 ];
 
 /* ----------------------------------------------------------------- views */
-// Time series collection: timeField = ts, metaField = meta.
+// Time series collection: timeField = ts, metaField = meta (el usuario: cada usuario es "una serie").
 // Cada documento es una sesión de reproducción.
 DB.views = [
-  { ts: "2026-10-03T23:10:00Z", meta: { user_id: U(1), media_id: M(10) }, episode: { season: 1, number: 4 }, minutes: 32, completed: false },
-  { ts: "2026-10-03T22:05:00Z", meta: { user_id: U(1), media_id: M(10) }, episode: { season: 1, number: 3 }, minutes: 58, completed: true },
-  { ts: "2026-10-02T21:40:00Z", meta: { user_id: U(1), media_id: M(6) },  minutes: 71, completed: false },
-  { ts: "2026-10-01T00:30:00Z", meta: { user_id: U(1), media_id: M(10) }, episode: { season: 1, number: 2 }, minutes: 58, completed: true },
-  { ts: "2026-09-30T23:20:00Z", meta: { user_id: U(1), media_id: M(10) }, episode: { season: 1, number: 1 }, minutes: 58, completed: true },
-  { ts: "2026-09-28T20:00:00Z", meta: { user_id: U(1), media_id: M(11) }, episode: { season: 2, number: 3 }, minutes: 21, completed: false },
-  { ts: "2026-09-27T19:15:00Z", meta: { user_id: U(1), media_id: M(15) }, minutes: 180, completed: true },
-  { ts: "2026-09-25T22:45:00Z", meta: { user_id: U(1), media_id: M(11) }, episode: { season: 2, number: 2 }, minutes: 55, completed: true },
-  { ts: "2026-09-24T22:00:00Z", meta: { user_id: U(1), media_id: M(11) }, episode: { season: 2, number: 1 }, minutes: 55, completed: true },
-  { ts: "2026-09-20T18:30:00Z", meta: { user_id: U(1), media_id: M(9) },  minutes: 120, completed: true },
+  { ts: "2026-10-03T23:10:00Z", meta: { user_id: U(1) }, media_id: M(10), episode: { season: 1, number: 4 }, minutes: 32, completed: false },
+  { ts: "2026-10-03T22:05:00Z", meta: { user_id: U(1) }, media_id: M(10), episode: { season: 1, number: 3 }, minutes: 58, completed: true },
+  { ts: "2026-10-02T21:40:00Z", meta: { user_id: U(1) }, media_id: M(6),  minutes: 71, completed: false },
+  { ts: "2026-10-01T00:30:00Z", meta: { user_id: U(1) }, media_id: M(10), episode: { season: 1, number: 2 }, minutes: 58, completed: true },
+  { ts: "2026-09-30T23:20:00Z", meta: { user_id: U(1) }, media_id: M(10), episode: { season: 1, number: 1 }, minutes: 58, completed: true },
+  { ts: "2026-09-28T20:00:00Z", meta: { user_id: U(1) }, media_id: M(11), episode: { season: 2, number: 3 }, minutes: 21, completed: false },
+  { ts: "2026-09-27T19:15:00Z", meta: { user_id: U(1) }, media_id: M(15), minutes: 180, completed: true },
+  { ts: "2026-09-25T22:45:00Z", meta: { user_id: U(1) }, media_id: M(11), episode: { season: 2, number: 2 }, minutes: 55, completed: true },
+  { ts: "2026-09-24T22:00:00Z", meta: { user_id: U(1) }, media_id: M(11), episode: { season: 2, number: 1 }, minutes: 55, completed: true },
+  { ts: "2026-09-20T18:30:00Z", meta: { user_id: U(1) }, media_id: M(9),  minutes: 120, completed: true },
 ];
 
 // Resultado de la agregación "Tendencias de la semana" sobre views

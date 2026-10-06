@@ -14,7 +14,7 @@ function continueWatching(userId) {
   DB.views
     .filter((v) => v.meta.user_id === userId)
     .sort((a, b) => b.ts.localeCompare(a.ts))
-    .forEach((v) => { last[v.meta.media_id] ??= v; });
+    .forEach((v) => { last[v.media_id] ??= v; });
   return Object.values(last).filter((v) => !v.completed);
 }
 function episodeOf(m, ep) {
@@ -84,7 +84,7 @@ db.genres.find().sort({ name: 1 })`,
               ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
   { $sort: { ts: -1 } },
   // última sesión de cada título
-  { $group: { _id: "$meta.media_id", last: { $first: "$$ROOT" } } },
+  { $group: { _id: "$media_id", last: { $first: "$$ROOT" } } },
   { $match: { "last.completed": false } },
   { $sort: { "last.ts": -1 } },
   { $limit: 10 },
@@ -95,7 +95,7 @@ db.genres.find().sort({ name: 1 })`,
     docs: () => cont, docsLabel: "Documentos de views (última sesión de cada título)" }).attr}>
     <div class="section-head"><h2 class="section-title">Seguir viendo</h2><span class="section-sub">Continuá donde lo dejaste</span></div>
     <div class="row wide">
-      ${cont.map((v) => { const m = MEDIA[v.meta.media_id]; const a = artVars(m); return `
+      ${cont.map((v) => { const m = MEDIA[v.media_id]; const a = artVars(m); return `
         <a class="card continue" href="detalle.html?id=${m._id}">
           <div class="thumb art" style="${a.style};--x1:70%;--y1:30%" data-motif="${a.motif}" data-font="${a.font}"><div class="poster-title">${esc(m.title)}</div></div>
           <div class="progress"><span style="width:${viewProgress(v, m)}%"></span></div>
@@ -107,7 +107,7 @@ db.genres.find().sort({ name: 1 })`,
   <section class="section" ${ann({ col: ["views", "media"], title: "Top 10 de la semana", short: "aggregate: $match ts → $group $sum → $sort",
     q: `db.views.aggregate([
   { $match: { ts: { $gte: ISODate("${isoDaysAgo(7)}") } } },
-  { $group: { _id: "$meta.media_id", views: { $sum: 1 } } },
+  { $group: { _id: "$media_id", views: { $sum: 1 } } },
   { $sort: { views: -1 } },
   { $limit: 10 },
   { $lookup: { from: "media", localField: "_id",
@@ -182,7 +182,7 @@ function renderDetail(app) {
     .filter((x) => x._id !== m._id && x.genre_ids.some((g) => m.genre_ids.includes(g)))
     .sort((a, b) => b.rating.avg - a.rating.avg).slice(0, 10);
   const inList = ME.watchlist.includes(m._id);
-  const lastView = DB.views.find((v) => v.meta.user_id === ME._id && v.meta.media_id === m._id);
+  const lastView = DB.views.find((v) => v.meta.user_id === ME._id && v.media_id === m._id);
   const totalEps = m.type === "series" ? m.seasons.reduce((n, s) => n + s.episodes.length, 0) : 0;
 
   const aDoc = ann({ col: "media", title: "Documento del título", short: `findOne({ _id: ObjectId("…${m._id.slice(-4)}") })`,
@@ -313,12 +313,12 @@ db.reviews.aggregate([
         </div>
       </div>
       ${lastView ? `
-      <div class="panel" ${ann({ col: "views", title: "Tu última reproducción", short: "find({ meta: … }).sort({ ts: -1 }).limit(1)",
+      <div class="panel" ${ann({ col: "views", title: "Tu última reproducción", short: 'find({ "meta.user_id", media_id }).sort({ ts: -1 })',
         q: `db.views.find({ "meta.user_id": ${oid(ME._id)},
-                "meta.media_id": ${oid(m._id)} })
+                media_id: ${oid(m._id)} })
   .sort({ ts: -1 })
   .limit(1)`,
-        why: "Consulta por metaField (usuario + título) ordenada por timeField: es el patrón de acceso típico de una colección de series temporales.",
+        why: "Filtra por el metaField (el usuario) y ordena por el timeField: es el patrón de acceso típico de una colección de series temporales.",
         docs: () => [lastView] }).attr}>
         <h3>Tu actividad</h3>
         <div style="font-weight:600">${esc(viewLabel(lastView, m))}</div>
@@ -567,7 +567,7 @@ function renderProfile(app) {
   { $match: { "meta.user_id": ${oid(ME._id)},
               ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
   { $sort: { ts: -1 } },
-  { $lookup: { from: "media", localField: "meta.media_id",
+  { $lookup: { from: "media", localField: "media_id",
                foreignField: "_id", as: "media",
                pipeline: [ { $project: { title: 1, poster: 1, seasons: 1 } } ] } },
   { $unwind: "$media" }
@@ -576,7 +576,7 @@ function renderProfile(app) {
         docs: () => myViews, docsLabel: "Documentos de views" }).attr}>
         <div class="history">${Object.entries(days).map(([d, vs]) => `
           <div class="history-day"><h4>${fmtDate(d + "T12:00:00Z")}</h4>
-            ${vs.map((v) => { const m = MEDIA[v.meta.media_id]; return `
+            ${vs.map((v) => { const m = MEDIA[v.media_id]; return `
               <a class="history-item" href="detalle.html?id=${m._id}">${poster(m, "sm")}
                 <div><div class="t">${esc(m.title)}</div><div class="s">${esc(viewLabel(v, m))}</div></div>
                 <div class="time">${v.ts.slice(11, 16)} · ${v.minutes} min<br><span class="pill ${v.completed ? "ok" : "mid"}">${v.completed ? "Terminado" : `${viewProgress(v, m)}%`}</span></div>

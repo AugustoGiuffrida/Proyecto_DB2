@@ -37,14 +37,37 @@ El botón **"Ver modelo de datos"** (abajo a la derecha) marca cada sección con
 
 Los datos del prototipo ([`interfaces/assets/data.js`](interfaces/assets/data.js)) tienen exactamente la forma de los documentos del modelo. Los pósters son arte generado por CSS; en la base, `poster` y `backdrop` guardan la ruta de la imagen.
 
+## Base de datos
+
+Requisitos: MongoDB 8 corriendo en `localhost:27017` y `mongosh`.
+
+```bash
+mongosh db/setup.js
+```
+
+Crea la base **`fotograma`** desde cero (borra la anterior si existe). En una PC común tarda alrededor de un minuto y medio.
+
+| Script | Qué hace |
+|---|---|
+| [`db/00_crear_db.js`](db/00_crear_db.js) | Crea las 6 colecciones. Cinco tienen validación `$jsonSchema` y `views` es una serie temporal |
+| [`db/01_datos_semilla.js`](db/01_datos_semilla.js) | Carga los documentos del prototipo (16 títulos reales, sus personas, CineFan88…) |
+| [`db/02_datos_masivos.js`](db/02_datos_masivos.js) | Genera datos coherentes: 4.000 personas, 3.000 títulos, 10.000 usuarios, 150.000 reseñas y 1.000.000 de reproducciones |
+| [`db/03_ratings.js`](db/03_ratings.js) | Calcula `media.rating` desde las reseñas (`$group` + `$merge`) |
+| [`db/04_indices.js`](db/04_indices.js) | Crea los índices, después de la carga |
+| [`db/05_verificar.js`](db/05_verificar.js) | Muestra el volumen por colección, prueba que la validación rechace documentos inválidos y controla la integridad de las referencias |
+
+- **Volúmenes:** se configuran en [`db/config.js`](db/config.js).
+- **Reproducibilidad:** el generador usa una semilla fija, así que cada corrida produce los mismos datos y las mediciones de rendimiento se pueden repetir.
+- **Por separado:** cada script también se puede correr solo, por ejemplo `mongosh db/05_verificar.js`.
+
 ## Estado
 
 - [x] Tema y pantallas
 - [x] Modelo de datos (6 colecciones)
-- [ ] Entorno MongoDB (Docker) y validación de esquemas
-- [ ] Carga masiva de datos
+- [x] Creación de la base, validación de esquemas y carga masiva de datos
+- [x] Índices
 - [ ] Consultas avanzadas (`consultas/*.js`)
-- [ ] Índices y medición de rendimiento (`explain("executionStats")`)
+- [ ] Medición de rendimiento (`explain("executionStats")` con y sin índices)
 - [ ] Política de backup y restauración
 
-> `operaciones.md`, `guia.md` y `cargar_datos/` corresponden al modelo anterior (3 colecciones) y se van a actualizar en la etapa de implementación.
+> `operaciones.md` y `guia.md` corresponden al modelo anterior (3 colecciones) y se van a actualizar en las próximas etapas.

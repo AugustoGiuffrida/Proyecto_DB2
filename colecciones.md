@@ -28,7 +28,7 @@ flowchart LR
     users -- "favorite_genre_ids [ ]" --> genres
     reviews -- "media_id" --> media
     reviews -- "user_id + user {username, avatar}" --> users
-    views -- "meta.media_id" --> media
+    views -- "media_id" --> media
     views -- "meta.user_id" --> users
 ```
 
@@ -213,14 +213,15 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
 
 ```js
 db.createCollection("views", {
-  timeseries: { timeField: "ts", metaField: "meta", granularity: "minutes" }
+  timeseries: { timeField: "ts", metaField: "meta", granularity: "hours" }
 })
 ```
 ```js
 {
   ts: ISODate("2026-10-03T23:10:00Z"),
-  meta: { user_id: ObjectId("665f0c…01"), media_id: ObjectId("665f0a…10") },
-  episode: { season: 1, number: 4 },   // solo si es una serie
+  meta: { user_id: ObjectId("665f0c…01") },    // la "serie": cada usuario
+  media_id: ObjectId("665f0a…10"),
+  episode: { season: 1, number: 4 },          // solo si es una serie
   minutes: 32,
   completed: false
 }
@@ -228,14 +229,32 @@ db.createCollection("views", {
 
 **Decisiones**
 - Cada documento es **una sesión de reproducción**. Se insertan muchísimos, ordenados por tiempo, se consultan por rangos de fechas y no se modifican. Es exactamente el caso de uso de las series temporales que vimos en clase.
-- MongoDB agrupa internamente los documentos en *buckets* por `meta` y tiempo, y los comprime. Ocupa menos disco y las consultas por rango son más rápidas.
+- MongoDB agrupa internamente los documentos en *buckets* (uno por valor de `meta` y por período de tiempo) y los comprime. Ocupa menos disco y las consultas por rango son más rápidas.
+- **`meta` = el usuario.** Cada usuario es "una serie", como un sensor en IoT. El `meta` tiene que identificar la fuente de los datos y tener **pocos valores distintos**.
+- **`granularity: "hours"`.** Un usuario reproduce algo cada varias horas, no cada minuto. Con `"hours"` cada bucket puede abarcar hasta 30 días; con `"minutes"`, solo uno.
 - Alimenta cuatro secciones:
   - "Top 10 de la semana": `$match` por `ts` y `$group` con `$sum`.
   - "Seguir viendo": `$group` con `$first`, quedándose con la última sesión de cada título.
   - Historial del perfil.
   - Horas vistas en el mes: `$sum` de `minutes`.
 
-**Índices previstos:** el índice compuesto sobre `meta` + `ts` se crea automáticamente. Se agrega `{ "meta.user_id": 1, ts: -1 }` para el historial y "Seguir viendo".
+**Lo medimos** (1.000.000 de reproducciones, ver `db/00_crear_db.js`)
+
+La primera versión usaba `meta: { user_id, media_id }` con `granularity: "minutes"`:
+
+| | `meta` = usuario + título, `minutes` | `meta` = usuario, `hours` |
+|---|---|---|
+| valores distintos de `meta` | 726.222 | 10.004 |
+| buckets | 981.837 (≈ 1 documento por bucket) | 29.625 (≈ 34 documentos por bucket) |
+| tamaño de los datos | 349 MB | 34 MB |
+| espacio en disco* | ≈ 63 MB | ≈ 9–18 MB |
+| tamaño de los índices* | ≈ 81 MB | ≈ 2–3 MB |
+
+Con casi un bucket por documento la serie temporal no tenía ningún beneficio: ocupaba más que una colección común.
+
+\* El espacio en disco varía entre corridas según cuándo WiredTiger compacta los archivos; la cantidad de buckets y el tamaño de los datos son estables.
+
+**Índices previstos:** MongoDB crea automáticamente un índice sobre `meta` + `ts`. Se agrega `{ "meta.user_id": 1, ts: -1 }` para el historial y "Seguir viendo".
 
 ---
 
