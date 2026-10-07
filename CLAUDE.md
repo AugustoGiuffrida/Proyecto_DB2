@@ -61,8 +61,9 @@ Base **`fotograma`**, con 6 colecciones:
 
 ## Base de datos local
 
-- **Entorno:** MongoDB 8.0 corre como servicio en `localhost:27017`, con mongosh 2.13 y las database tools instaladas.
-- **Armado:** `mongosh db/setup.js` recrea la base desde cero en alrededor de 1,5 minutos.
+- **Entorno:** MongoDB 8.0 corre en Docker (`docker-compose.yml`, contenedor `fotograma-mongo`) en `localhost:27017`, sin autenticación. La imagen trae mongosh y las database tools. El repo está montado en `/proyecto` (directorio de trabajo del contenedor).
+- **Armado:** `docker compose exec mongo mongosh db/setup.js` recrea la base desde cero (~5 minutos en esta Mac Intel con Docker; ~1,5 en una PC común sin Docker).
+- **Comandos de mongosh/mongodump:** correrlos con `docker compose exec mongo ...`, porque no están instalados en el Mac.
 - **Volúmenes:** se definen en `db/config.js`. Valores actuales: 4.000 personas, 3.000 títulos, 10.000 usuarios, 150.000 reseñas y 1.000.000 de reproducciones.
 - **Reproducibilidad:** el generador usa una semilla fija (`CONFIG.semilla`) y una fecha "hoy" fija (`CONFIG.hoy` = 2026-10-06).
 - **Índices:** están definidos en `db/04_indices.js` (`globalThis.INDICES`) y todos tienen nombre, para poder usar `dropIndex` en las pruebas de rendimiento.

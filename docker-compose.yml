@@ -1,0 +1,37 @@
+# =============================================================================
+# MongoDB para el proyecto Fotograma
+#
+#   docker compose up -d                          levanta MongoDB
+#   docker compose exec mongo mongosh db/setup.js crea y carga la base
+#   docker compose exec mongo mongosh fotograma   abre la shell
+#   docker compose down                           apaga (los datos quedan)
+#   docker compose down -v                        apaga y BORRA los datos
+#
+# Compass (o cualquier cliente) se conecta a: mongodb://localhost:27017
+# =============================================================================
+
+services:
+  mongo:
+    image: mongo:8.0                 # misma versión mayor que pide el README
+    container_name: fotograma-mongo
+    restart: unless-stopped          # vuelve a arrancar solo si se reinicia Docker
+
+    ports:
+      - "127.0.0.1:27017:27017"      # solo accesible desde esta máquina (no hay usuario/clave)
+
+    volumes:
+      - mongo-data:/data/db          # los datos sobreviven a borrar el contenedor
+      - ./:/proyecto                 # el repo, para correr db/*.js (y guardar backups)
+
+    working_dir: /proyecto           # así las rutas son las mismas que en el README
+
+    # "healthy" cuando el servidor responde a un ping
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mongo-data:

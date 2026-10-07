@@ -39,13 +39,31 @@ Los datos del prototipo ([`interfaces/assets/data.js`](interfaces/assets/data.js
 
 ## Base de datos
 
+### Con Docker (recomendado)
+
+Requisito: Docker. El contenedor ya trae MongoDB 8, `mongosh` y las database tools (`mongodump`, `mongorestore`…).
+
+```bash
+docker compose up -d                            # levanta MongoDB en localhost:27017
+docker compose exec mongo mongosh db/setup.js   # crea y carga la base
+docker compose exec mongo mongosh fotograma     # abre la shell
+```
+
+- **Compass:** conectarse a `mongodb://localhost:27017`.
+- **Datos:** quedan en el volumen `mongo-data`. `docker compose down` apaga sin perderlos; `docker compose down -v` los borra.
+- El repo se monta en `/proyecto` dentro del contenedor, así que las rutas son las mismas que acá.
+
+### Sin Docker
+
 Requisitos: MongoDB 8 corriendo en `localhost:27017` y `mongosh`.
 
 ```bash
 mongosh db/setup.js
 ```
 
-Crea la base **`fotograma`** desde cero (borra la anterior si existe). En una PC común tarda alrededor de un minuto y medio.
+### Qué hace `setup.js`
+
+Crea la base **`fotograma`** desde cero (borra la anterior si existe). En una PC común tarda alrededor de un minuto y medio; con Docker en una Mac Intel, unos cinco minutos.
 
 | Script | Qué hace |
 |---|---|
