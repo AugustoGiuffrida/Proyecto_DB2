@@ -47,16 +47,16 @@ function renderHome(app) {
   const aChips = ann({ col: "genres", title: "Nombres de los géneros", short: "find() — se cachea en la app",
     q: `// media.genre_ids guarda slugs: [ "ciencia-ficcion", "drama", "thriller" ]
 // El nombre visible y el color salen de la colección genres,
-// que es muy chica (8 documentos) y se carga una sola vez:
+// que es muy chica (una docena de documentos) y se carga una sola vez:
 db.genres.find().sort({ name: 1 })`,
     why: "Los géneros se referencian por un slug estable que funciona como _id. Para filtrar no hace falta un $lookup, y renombrar un género es modificar un solo documento.",
     docs: () => f.genre_ids.map((g) => GENRES[g]), docsLabel: "Documentos de genres", maxDocs: 3 });
-  const aList = ann({ col: "users", title: "Agregar a Mi lista", short: "updateOne({ $addToSet: { watchlist } })",
+  const aList = ann({ col: "users", title: "Agregar a Mi lista", short: "updateOne({ watchlist: { $ne } }, { $push })",
     q: `db.users.updateOne(
-  { _id: ${oid(ME._id)} },
-  { $addToSet: { watchlist: ${oid(f._id)} } }   // $pull para quitarlo
+  { _id: ${oid(ME._id)}, watchlist: { $ne: ${oid(f._id)} } },
+  { $push: { watchlist: ${oid(f._id)} } }   // $pull para quitarlo
 )`,
-    why: "$addToSet agrega el _id solo si no está, así se evitan duplicados en el array de referencias.",
+    why: "$push agrega el _id al array de referencias. El filtro { watchlist: { $ne: id } } hace que solo se agregue si todavía no está, así no se duplica.",
     docs: () => [{ _id: ME._id, username: ME.username, watchlist: ME.watchlist }] });
 
   const inList = ME.watchlist.includes(f._id);
@@ -78,20 +78,19 @@ db.genres.find().sort({ name: 1 })`,
   </section>
 
   ${cont.length ? `
-  <section class="section" ${ann({ col: ["views", "media"], title: "Seguir viendo", short: "aggregate: $match → $group $first → $lookup",
-    q: `db.views.aggregate([
-  { $match: { "meta.user_id": ${oid(ME._id)},
-              ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
-  { $sort: { ts: -1 } },
-  // última sesión de cada título
-  { $group: { _id: "$media_id", last: { $first: "$$ROOT" } } },
-  { $match: { "last.completed": false } },
-  { $sort: { "last.ts": -1 } },
-  { $limit: 10 },
-  { $lookup: { from: "media", localField: "_id",
-               foreignField: "_id", as: "media" } }
-])`,
-    why: "views es una colección de series temporales: cada documento es una sesión de reproducción. Se agrupa por título quedándose con la sesión más reciente, y se descartan las que ya se terminaron.",
+  <section class="section" ${ann({ col: ["views", "media"], title: "Seguir viendo", short: "find({ meta.user_id, ts: { $gte } }).sort({ ts: -1 })",
+    q: `// 1) sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja
+db.views.find({ "meta.user_id": ${oid(ME._id)},
+                ts: { $gte: ISODate("${isoDaysAgo(30)}") } })
+  .sort({ ts: -1 })
+
+// 2) la aplicación recorre la lista y se queda con la primera sesión
+//    de cada título; si no está terminada, va a "Seguir viendo"
+
+// 3) nombres y pósters de esos títulos
+db.media.find({ _id: { $in: [ /* ids de los títulos */ ] } },
+              { title: 1, poster: 1 })`,
+    why: "views es una colección de series temporales: cada documento es una sesión de reproducción. La base devuelve las sesiones ordenadas por fecha y la aplicación elige la más reciente de cada título.",
     docs: () => cont, docsLabel: "Documentos de views (última sesión de cada título)" }).attr}>
     <div class="section-head"><h2 class="section-title">Seguir viendo</h2><span class="section-sub">Continuá donde lo dejaste</span></div>
     <div class="row wide">
@@ -111,8 +110,8 @@ db.genres.find().sort({ name: 1 })`,
   { $sort: { views: -1 } },
   { $limit: 10 },
   { $lookup: { from: "media", localField: "_id",
-               foreignField: "_id", as: "media",
-               pipeline: [ { $project: ${CARD_PROJ} } ] } }
+               foreignField: "_id", as: "media" } },
+  { $project: { views: 1, "media.title": 1, "media.poster": 1 } }
 ])`,
     why: "El ranking ya no es un número inventado guardado en media: se calcula sumando las reproducciones de los últimos 7 días. Las colecciones de series temporales están optimizadas justamente para filtrar por rango de tiempo.",
     docs: () => DB.trending_result, docsLabel: "Resultado del $group (antes del $lookup)", maxDocs: 4 }).attr}>
@@ -203,15 +202,15 @@ function renderDetail(app) {
         <div class="chips">${m.genre_ids.map(genreChip).join("")}</div>
         <div class="rating-big"><span class="num">★ ${m.rating.avg.toFixed(1)}</span><div><b>de 10</b><small>${nf.format(m.rating.count)} reseñas</small></div></div>
         <p class="hero-plot" style="-webkit-line-clamp:4">${esc(m.plot)}</p>
-        <div class="actions" ${ann({ col: "users", title: "Agregar / quitar de Mi lista", short: inList ? "updateOne({ $pull: { watchlist } })" : "updateOne({ $addToSet: { watchlist } })",
-          q: `// agregar
-db.users.updateOne({ _id: ${oid(ME._id)} },
-  { $addToSet: { watchlist: ${oid(m._id)} } })
+        <div class="actions" ${ann({ col: "users", title: "Agregar / quitar de Mi lista", short: inList ? "updateOne({ $pull: { watchlist } })" : "updateOne({ $push: { watchlist } })",
+          q: `// agregar (solo si todavía no está en la lista)
+db.users.updateOne({ _id: ${oid(ME._id)}, watchlist: { $ne: ${oid(m._id)} } },
+  { $push: { watchlist: ${oid(m._id)} } })
 
 // quitar
 db.users.updateOne({ _id: ${oid(ME._id)} },
   { $pull: { watchlist: ${oid(m._id)} } })`,
-          why: "Operadores de arrays vistos en clase: $addToSet (como $push pero sin duplicados) y $pull.",
+          why: "Operadores de arrays vistos en clase: $push agrega el elemento y $pull lo quita. El filtro con $ne evita agregarlo dos veces.",
           docs: () => [{ _id: ME._id, watchlist: ME.watchlist }] }).attr}>
           <button class="btn btn-primary">${ICON.play} ${lastView ? "Continuar" : "Reproducir"}</button>
           <button class="btn btn-ghost" data-toggle-list>${inList ? ICON.check + " En mi lista" : ICON.plus + " Mi lista"}</button>
@@ -228,12 +227,8 @@ db.users.updateOne({ _id: ${oid(ME._id)} },
     <div class="stack" style="gap:44px">
       ${m.type === "series" ? `
       <div ${ann({ col: "media", title: "Temporadas y episodios", short: "seasons (embebido, solo si type = \"series\")",
-        q: `// No hay consulta extra: seasons viene en el mismo findOne.
-// Para traer solo una temporada se puede proyectar:
-db.media.findOne(
-  { _id: ${oid(m._id)} },
-  { title: 1, seasons: { $elemMatch: { number: 1 } } }
-)`,
+        q: `// No hay consulta extra: seasons viene en el mismo findOne del título
+db.media.findOne({ _id: ${oid(m._id)} })`,
         why: "Las temporadas y episodios de una serie son pocos y acotados (relación uno a pocos), y nunca se consultan fuera de su serie, por eso se embeben. Es la parte polimórfica del documento.",
         docs: () => [{ _id: m._id, type: m.type, seasons: [m.seasons[0]] }] }).attr}>
         <div class="section-head"><h2 class="section-title">Episodios</h2></div>
@@ -279,15 +274,16 @@ db.reviews.insertOne({
   created_at: new Date()
 })
 
-// 2) recalcular el promedio guardado en media (patrón computado)
+// 2) recalcular promedio y cantidad de reseñas del título
 db.reviews.aggregate([
   { $match: { media_id: ${oid(m._id)} } },
   { $group: { _id: "$media_id",
-              avg: { $avg: "$rating" }, count: { $sum: 1 } } },
-  { $merge: { into: "media", on: "_id", whenMatched: [
-      { $set: { rating: { avg: { $round: ["$$new.avg", 1] },
-                          count: "$$new.count" } } } ] } }
-])`,
+              avg: { $avg: "$rating" }, count: { $sum: 1 } } }
+])
+
+// 3) guardar el resultado en media (patrón computado)
+db.media.updateOne({ _id: ${oid(m._id)} },
+  { $set: { "rating.avg": 8.4, "rating.count": 3121 } })`,
             why: "media.rating es un valor precalculado: se lee en cada card del catálogo y solo cambia cuando entra una reseña. Es más barato recalcularlo al escribir que promediar miles de reseñas en cada lectura.",
             docs: () => [{ _id: m._id, rating: m.rating }] }).attr}>${ICON.pen} Escribir reseña</button>
         </div>
@@ -390,18 +386,21 @@ function renderPerson(app) {
       <h1>${esc(p.name)}</h1>
       <div class="meta"><span>${esc(p.country)}</span><span class="dot"></span><span>Nació el ${fmtDate(p.birth_date)} (${age} años)</span></div>
       <p class="bio">${esc(p.bio)}</p>
-      <div class="stats" ${ann({ col: "media", title: "Estadísticas de la filmografía", short: "aggregate: $match → $group $avg",
+      <div class="stats" ${ann({ col: "media", title: "Estadísticas de la filmografía", short: "aggregate: $match → $project $cond → $group",
         q: `db.media.aggregate([
-  { $match: { $or: [ { "cast.person_id": ${oid(p._id)} },
-                     { "directors.person_id": ${oid(p._id)} } ] } },
+  { $match: { "cast.person_id": ${oid(p._id)} } },
+  { $project: {
+      rating: "$rating.avg",
+      esSerie: { $cond: { if: { $eq: ["$type", "series"] }, then: 1, else: 0 } }
+  } },
   { $group: {
       _id: null,
       titulos: { $sum: 1 },
-      series:  { $sum: { $cond: [ { $eq: ["$type", "series"] }, 1, 0 ] } },
-      rating:  { $avg: "$rating.avg" }
+      series:  { $sum: "$esSerie" },
+      rating_promedio: { $avg: "$rating" }
   } }
 ])`,
-        why: "Ejemplo de $group con $sum, $avg y $cond (expresión condicional), los operadores de agregación vistos en clase.",
+        why: "$project con $cond marca cada título con 1 si es serie y 0 si no; $group con _id: null reúne todo en un resultado y suma esas marcas.",
         docs: () => [{ _id: null, titulos: works.length, series: works.filter((m) => m.type === "series").length, rating: +avg.toFixed(2) }], docsLabel: "Resultado" }).attr}>
         <div class="stat"><b>${works.length}</b><span>Títulos</span></div>
         ${asCast.length ? `<div class="stat"><b>${asCast.length}</b><span>Actuación</span></div>` : ""}
@@ -411,13 +410,16 @@ function renderPerson(app) {
     </div>
   </section>
 
-  <section class="section" style="margin-top:56px" ${ann({ col: "media", title: "Filmografía", short: `find({ $or: [ { "cast.person_id" }, { "directors.person_id" } ] })`,
-    q: `db.media.find(
-  { $or: [ { "cast.person_id":     ${oid(p._id)} },
-           { "directors.person_id": ${oid(p._id)} } ] },
-  { title: 1, type: 1, poster: 1, release_year: 1, "rating.avg": 1,
-    cast: 1, directors: 1 }   // para mostrar el personaje o el rol
-).sort({ release_year: -1 })
+  <section class="section" style="margin-top:56px" ${ann({ col: "media", title: "Filmografía", short: `find({ "cast.person_id" }) + find({ "directors.person_id" })`,
+    q: `// títulos donde actuó
+db.media.find({ "cast.person_id": ${oid(p._id)} },
+              { title: 1, poster: 1, release_year: 1, cast: 1 })
+  .sort({ release_year: -1 })
+
+// títulos que dirigió
+db.media.find({ "directors.person_id": ${oid(p._id)} },
+              { title: 1, poster: 1, release_year: 1 })
+  .sort({ release_year: -1 })
 
 // índices: { "cast.person_id": 1 }  (multikey)
 //          { "directors.person_id": 1 }  (multikey)`,
@@ -528,7 +530,7 @@ function renderProfile(app) {
               minutos: { $sum: "$minutes" },
               sesiones: { $sum: 1 } } },
   { $project: { _id: 0, sesiones: 1,
-                horas: { $round: [ { $divide: ["$minutos", 60] }, 1 ] } } }
+                horas: { $divide: ["$minutos", 60] } } }
 ])`,
         why: "Rango de tiempo sobre una colección de series temporales + $group. El resultado se muestra en el encabezado del perfil.",
         docs: () => [{ sesiones: myViews.length, horas: +hours.toFixed(1) }], docsLabel: "Resultado" }).attr}>
@@ -550,12 +552,12 @@ function renderProfile(app) {
       from: "media",
       localField: "watchlist",      // array de ObjectId
       foreignField: "_id",
-      as: "items",
-      pipeline: [ { $project: ${CARD_PROJ} } ]
+      as: "items"
   } },
-  { $project: { _id: 0, items: 1 } }
+  { $project: { _id: 0, "items.title": 1, "items.poster": 1,
+                "items.release_year": 1, "items.rating.avg": 1 } }
 ])`,
-      why: "watchlist guarda solo referencias porque la lista crece con el uso. $lookup sobre un campo array busca cada elemento en media, sin necesidad de $unwind.",
+      why: "watchlist guarda solo referencias porque la lista crece con el uso. $lookup busca en media cada _id del array y devuelve los títulos en items.",
       docs: () => [{ _id: ME._id, watchlist: ME.watchlist }] }).attr}>
       <div class="grid">${list.map((m) => mediaCard(m)).join("")}</div></div>`,
 
@@ -568,9 +570,9 @@ function renderProfile(app) {
               ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
   { $sort: { ts: -1 } },
   { $lookup: { from: "media", localField: "media_id",
-               foreignField: "_id", as: "media",
-               pipeline: [ { $project: { title: 1, poster: 1, seasons: 1 } } ] } },
-  { $unwind: "$media" }
+               foreignField: "_id", as: "media" } },
+  { $project: { ts: 1, episode: 1, minutes: 1, completed: 1,
+                "media.title": 1, "media.poster": 1 } }
 ])`,
         why: "Lo \"visto\" no se guarda como una lista en users (crecería sin límite): se obtiene de views. Así el historial tiene fecha, duración y episodio de cada sesión.",
         docs: () => myViews, docsLabel: "Documentos de views" }).attr}>
@@ -590,7 +592,6 @@ function renderProfile(app) {
   { $sort: { created_at: -1 } },
   { $lookup: { from: "media", localField: "media_id",
                foreignField: "_id", as: "media" } },
-  { $unwind: "$media" },
   { $project: { rating: 1, comment: 1, created_at: 1,
                 "media.title": 1, "media.poster": 1 } }
 ])
@@ -606,16 +607,14 @@ function renderProfile(app) {
 
     cuenta: () => `<div class="account" ${ann({ col: "users", title: "Cuenta y pagos", short: "subdocumentos embebidos en users",
       q: `// Se leen del mismo documento (findOne del encabezado).
-// Ejemplo de modificación: cambiar el método por defecto
+// Ejemplo de modificación: cambiar de plan.
+// La notación con punto modifica campos del subdocumento.
 db.users.updateOne(
   { _id: ${oid(ME._id)} },
-  { $set: { "payment_methods.$[].is_default": false } }
-)
-db.users.updateOne(
-  { _id: ${oid(ME._id)}, "payment_methods.type": "mercadopago" },
-  { $set: { "payment_methods.$.is_default": true } }
+  { $set: { "subscription.plan": "Estándar",
+            "subscription.billing": "mensual" } }
 )`,
-      why: "subscription es un subdocumento (uno a uno) y payment_methods es un array chico (uno a pocos). Los dos se embeben. Con el operador posicional $ se modifica el elemento del array que coincide con el filtro.",
+      why: "subscription es un subdocumento (uno a uno) y payment_methods es un array chico (uno a pocos). Los dos se embeben porque pertenecen solo a este usuario y se muestran en su perfil.",
       docs: () => [{ _id: ME._id, subscription: ME.subscription, payment_methods: ME.payment_methods }] }).attr}>
       <div class="panel"><h3>Suscripción</h3><div class="facts">
         <div><span>Plan</span><span>${esc(ME.subscription.plan)}</span></div>

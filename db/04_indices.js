@@ -24,8 +24,8 @@ titulo("Creando índices");
 
 globalThis.INDICES = {
   media: [
-    // Barra de búsqueda (índice de texto, en español: ignora "el", "la", "de"…)
-    [{ title: "text", original_title: "text" }, { name: "media_busqueda_texto", default_language: "spanish", weights: { title: 10, original_title: 5 } }],
+    // Barra de búsqueda y orden alfabético
+    [{ title: 1 }, { name: "media_titulo" }],
     // Página de género y carruseles por género (multikey: genre_ids es un array)
     [{ genre_ids: 1, type: 1, "rating.avg": -1 }, { name: "media_genero_tipo_rating" }],
     // "Series para maratonear" y filtro Películas / Series
@@ -35,8 +35,8 @@ globalThis.INDICES = {
     // Filmografía de una persona (multikey)
     [{ "cast.person_id": 1 }, { name: "media_reparto" }],
     [{ "directors.person_id": 1 }, { name: "media_directores" }],
-    // Título destacado: índice parcial, solo indexa los documentos destacados
-    [{ is_featured: 1 }, { name: "media_destacado", partialFilterExpression: { is_featured: true } }],
+    // Título destacado (hero)
+    [{ is_featured: 1 }, { name: "media_destacado" }],
   ],
   users: [
     [{ email: 1 }, { name: "users_email_unico", unique: true }],

@@ -9,7 +9,7 @@ Una plataforma de streaming / catálogo (estilo IMDb o Netflix) donde los usuari
 El tema tiene:
 - **Varias entidades:** títulos, géneros, personas, usuarios, reseñas y reproducciones.
 - **Todas las cardinalidades:** uno a uno, uno a pocos, uno a muchos y muchos a muchos.
-- **Consultas variadas:** búsqueda por texto, filtros y ordenamientos, rankings por período, `$lookup` entre colecciones y agregaciones con `$group`.
+- **Consultas variadas:** búsqueda por título, filtros y ordenamientos, rankings por período, `$lookup` entre colecciones y agregaciones con `$group`.
 - **Volumen real para medir índices:** las reseñas y, sobre todo, las reproducciones crecen rápido.
 
 ## Proceso de diseño
@@ -18,6 +18,7 @@ Como vimos en la clase de modelado, en MongoDB **primero se diseña la aplicaci�
 
 1. **Interfaces** → [`interfaces/`](interfaces/): prototipo navegable de las 5 pantallas.
 2. **Modelo** → [`colecciones.md`](colecciones.md): 6 colecciones, decisiones de embeber o referenciar, relaciones, patrones e índices previstos.
+3. **Consultas** → [`consultas.md`](consultas.md): todas las consultas de la aplicación por pantalla, más escrituras y reportes analíticos, con resultados reales. Los scripts ejecutables están en [`consultas/`](consultas/) (`mongosh consultas/todas.js`).
 
 ## Pantallas
 
@@ -70,7 +71,7 @@ Crea la base **`fotograma`** desde cero (borra la anterior si existe). En una PC
 | [`db/00_crear_db.js`](db/00_crear_db.js) | Crea las 6 colecciones. Cinco tienen validación `$jsonSchema` y `views` es una serie temporal |
 | [`db/01_datos_semilla.js`](db/01_datos_semilla.js) | Carga los documentos del prototipo (16 títulos reales, sus personas, CineFan88…) |
 | [`db/02_datos_masivos.js`](db/02_datos_masivos.js) | Genera datos coherentes: 4.000 personas, 3.000 títulos, 10.000 usuarios, 150.000 reseñas y 1.000.000 de reproducciones |
-| [`db/03_ratings.js`](db/03_ratings.js) | Calcula `media.rating` desde las reseñas (`$group` + `$merge`) |
+| [`db/03_ratings.js`](db/03_ratings.js) | Calcula `media.rating` desde las reseñas (`$group` + `updateOne`) |
 | [`db/04_indices.js`](db/04_indices.js) | Crea los índices, después de la carga |
 | [`db/05_verificar.js`](db/05_verificar.js) | Muestra el volumen por colección, prueba que la validación rechace documentos inválidos y controla la integridad de las referencias |
 
@@ -84,8 +85,8 @@ Crea la base **`fotograma`** desde cero (borra la anterior si existe). En una PC
 - [x] Modelo de datos (6 colecciones)
 - [x] Creación de la base, validación de esquemas y carga masiva de datos
 - [x] Índices
-- [ ] Consultas avanzadas (`consultas/*.js`)
+- [x] Consultas avanzadas ([`consultas.md`](consultas.md))
 - [ ] Medición de rendimiento (`explain("executionStats")` con y sin índices)
 - [ ] Política de backup y restauración
 
-> `operaciones.md` y `guia.md` corresponden al modelo anterior (3 colecciones) y se van a actualizar en las próximas etapas.
+> `guia.md` corresponde al modelo anterior (3 colecciones) y se va a rehacer junto con la política de backup.

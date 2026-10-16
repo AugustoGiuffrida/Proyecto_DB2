@@ -86,7 +86,7 @@ const generarTitulo = function () {
     case 4: return `${azar.elegir(["Operación", "Proyecto", "Expediente", "Código"])} ${azar.elegir(CLAVES)}`;
     case 5: return cap(s.w);
     case 6: return `${cap(s.w)} ${azar.elegir(ADJ)[s.f ? 1 : 0]}`;
-    default: return `Después de ${art(s).toLowerCase()} ${s.w}`;
+    default: return `Después ${s.f ? "de la" : "del"} ${s.w}`;
   }
 }
 
@@ -240,8 +240,8 @@ const elegirTituloVista = azar.ponderado(ordenPopularidad, pesosVistas);
 // 3. users
 // =============================================================================
 t = cronometro();
-const usuarios = db.users.find({}, { username: 1, avatar: 1, created_at: 1 }).toArray()
-  .map((u) => ({ _id: u._id, username: u.username, avatar: u.avatar, created_at: u.created_at }));
+const usuarios = db.users.find({}, { username: 1, avatar: 1, created_at: 1, "subscription.plan": 1 }).toArray()
+  .map((u) => ({ _id: u._id, username: u.username, avatar: u.avatar, created_at: u.created_at, plan: u.subscription.plan }));
 const usados = new Set(usuarios.map((u) => u.username.toLowerCase()));
 const caracteresHash = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -288,13 +288,15 @@ const r3 = insertarEnLotes(db.users, N.users, () => {
     payment_methods: metodos,
     watchlist: [...watchlist.values()],
   };
-  usuarios.push({ _id: doc._id, username, avatar: doc.avatar, created_at });
+  usuarios.push({ _id: doc._id, username, avatar: doc.avatar, created_at, plan: doc.subscription.plan });
   return doc;
 });
 paso(`users: ${fmt(r3.insertados)} en ${t()}`);
 
 // Algunos usuarios son mucho más activos que otros
-const elegirUsuario = azar.ponderado(usuarios, usuarios.map(() => Math.exp(azar.normal(0, 1))));
+// y los planes más caros se usan más
+const factorPlan = { "Básico": 0.6, "Estándar": 1, "Premium": 1.7 };
+const elegirUsuario = azar.ponderado(usuarios, usuarios.map((u) => factorPlan[u.plan] * Math.exp(azar.normal(0, 0.6))));
 
 // =============================================================================
 // 4. reviews — a lo sumo una reseña por par (título, usuario)
@@ -370,9 +372,19 @@ const generarVista = (inicioDia) => {
 
 let insertadas = 0;
 let pendientes = [];
-const porDia = Math.floor(N.views / CONFIG.diasDeViews);
+// Reproducciones por día: más de viernes a domingo y con un crecimiento
+// gradual de la plataforma a lo largo del período
+const pesoDia = Array.from({ length: CONFIG.diasDeViews }, (_, d) => {
+  const diaSemana = new Date(primerDia + d * DIA).getUTCDay();   // 0 = domingo
+  const finde = diaSemana === 0 || diaSemana === 5 || diaSemana === 6 ? 1.35 : 1;
+  return finde * (1 + 0.3 * d / CONFIG.diasDeViews);
+});
+const sumaPesos = pesoDia.reduce((a, b) => a + b, 0);
+const cantidadDia = pesoDia.map((p) => Math.floor(N.views * p / sumaPesos));
+cantidadDia[cantidadDia.length - 1] += N.views - cantidadDia.reduce((a, b) => a + b, 0);   // redondeo
+
 for (let d = 0; d < CONFIG.diasDeViews; d++) {
-  const cantidad = porDia + (d < N.views % CONFIG.diasDeViews ? 1 : 0);
+  const cantidad = cantidadDia[d];
   const delDia = Array.from({ length: cantidad }, () => generarVista(primerDia + d * DIA));
   delDia.sort((a, b) => a.ts - b.ts);
   pendientes.push(...delDia);

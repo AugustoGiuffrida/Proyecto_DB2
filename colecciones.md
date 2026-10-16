@@ -96,12 +96,12 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
 **Índices previstos**
 | Índice | Para |
 |---|---|
-| `{ title: "text", original_title: "text" }` | barra de búsqueda |
+| `{ title: 1 }` | barra de búsqueda y orden alfabético |
 | `{ genre_ids: 1, type: 1, "rating.avg": -1 }` | página de género y carruseles por género (multikey) |
 | `{ type: 1, "rating.avg": -1 }` | "Series para maratonear", filtros Películas/Series |
 | `{ created_at: -1 }` | "Recién agregadas" |
 | `{ "cast.person_id": 1 }` · `{ "directors.person_id": 1 }` | filmografía de una persona (multikey) |
-| `{ is_featured: 1 }` (parcial: `is_featured: true`) | hero del Inicio |
+| `{ is_featured: 1 }` | hero del Inicio |
 
 ---
 
@@ -136,13 +136,13 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
 
 **Decisiones**
 - **Muchos a muchos** entre personas y títulos: una persona trabaja en muchos títulos y un título tiene muchas personas.
-- La relación se guarda **de un solo lado** (en `media.directors` y `media.cast`). No hace falta mantener en `people` una lista de títulos: con índices multikey sobre `directors.person_id` y `cast.person_id`, la filmografía es un `find`:
+- La relación se guarda **de un solo lado** (en `media.directors` y `media.cast`). No hace falta mantener en `people` una lista de títulos: con índices multikey sobre `cast.person_id` y `directors.person_id`, la filmografía son dos `find`:
   ```js
-  db.media.find({ $or: [ { "cast.person_id": id }, { "directors.person_id": id } ] })
+  db.media.find({ "cast.person_id": id })        // títulos donde actuó (por ejemplo, Ricardo Darín)
+  db.media.find({ "directors.person_id": id })   // títulos que dirigió (por ejemplo, Christopher Nolan)
   ```
-  Se usa `$or` porque una persona puede estar en el array `directors` o en el array `cast`, según su rol en cada título. Por ejemplo, Christopher Nolan aparece en `directors` y Ricardo Darín en `cast`. Cada array tiene su propio índice multikey.
 - La biografía, la fecha y el país solo aparecen en la ficha de la persona, por eso no se copian en `media`.
-- *Costo asumido:* si una persona cambia de nombre, hay que actualizar la copia en `media` con `updateMany`. Es un caso muy raro.
+- *Costo asumido:* si una persona cambia de nombre, hay que actualizar la copia en cada título de `media` donde aparece. Es un caso muy raro (ver la consulta 6.7 de [`consultas.md`](consultas.md)).
 
 ---
 
@@ -198,7 +198,7 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
 - **Colección propia** porque es **uno a muchos sin límite** desde dos lados: un título popular puede tener miles de reseñas, y un usuario activo también. Embeberlas en `media` o en `users` podría llevar los documentos al límite de 16 MB.
 - **Referencia extendida a `users`:** se copia `username` y `avatar` para mostrar la reseña sin consultar `users`.
 - Se consulta desde dos pantallas: por `media_id` en el detalle y por `user_id` en el perfil (con `$lookup` a `media` para el título).
-- Al insertar una reseña se recalcula `media.rating` con un `$group` + `$avg` (ver detalle → "Escribir reseña").
+- Al insertar una reseña se recalcula `media.rating`: un `aggregate` con `$group` obtiene el promedio y la cantidad, y un `updateOne` con `$set` los guarda en `media`.
 
 **Índices previstos**
 | Índice | Para |
@@ -234,7 +234,7 @@ db.createCollection("views", {
 - **`granularity: "hours"`.** Un usuario reproduce algo cada varias horas, no cada minuto. Con `"hours"` cada bucket puede abarcar hasta 30 días; con `"minutes"`, solo uno.
 - Alimenta cuatro secciones:
   - "Top 10 de la semana": `$match` por `ts` y `$group` con `$sum`.
-  - "Seguir viendo": `$group` con `$first`, quedándose con la última sesión de cada título.
+  - "Seguir viendo": las sesiones del usuario ordenadas por fecha; la aplicación se queda con la más reciente de cada título.
   - Historial del perfil.
   - Horas vistas en el mes: `$sum` de `minutes`.
 
@@ -285,8 +285,8 @@ Con casi un bucket por documento la serie temporal no tenía ningún beneficio: 
 | Pantalla | Colecciones | Consultas principales |
 |---|---|---|
 | **Inicio** | `media`, `views`, `genres`, `users` | `findOne({ is_featured: true })` · top 10 = `aggregate` sobre `views` · `find().sort({ created_at: -1 })` · `find({ genre_ids })` · `find({ type: "series" })` |
-| **Detalle** | `media`, `reviews`, `views`, `users` | un `findOne` trae casi todo · `reviews.find({ media_id }).sort(…)` · `$addToSet` / `$pull` en `watchlist` |
-| **Persona** | `people`, `media` | `people.findOne` · `media.find({ "cast.person_id" })` · `$group` con `$avg` / `$cond` |
+| **Detalle** | `media`, `reviews`, `views`, `users` | un `findOne` trae casi todo · `reviews.find({ media_id }).sort(…)` · `$push` / `$pull` en `watchlist` |
+| **Persona** | `people`, `media` | `people.findOne` · `media.find({ "cast.person_id" })` · `media.find({ "directors.person_id" })` · `$project` con `$cond` + `$group` |
 | **Género / Explorar** | `genres`, `media` | `genres.findOne({ _id: slug })` · `media.find({ genre_ids, type }).sort(…)` |
 | **Perfil** | `users`, `media`, `reviews`, `views` | `users.findOne` · `$lookup` watchlist → media · `reviews` + `$lookup` · historial y horas sobre `views` |
 

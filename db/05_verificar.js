@@ -4,7 +4,7 @@
 //  1. Cantidad de documentos y espacio en disco por colección
 //  2. Las reglas de validación rechazan documentos inválidos
 //  3. Integridad de las referencias (MongoDB no tiene claves foráneas:
-//     se controla con $lookup)
+//     se controla con $lookup y con búsquedas $in)
 //
 // Uso:  mongosh db/05_verificar.js
 // =============================================================================
@@ -58,47 +58,54 @@ debeFallar("reseña duplicada (índice único)", () => {
 
 // -----------------------------------------------------------------------------
 titulo("3. Integridad de referencias");
-// Cuenta los documentos cuya referencia no apunta a ningún documento existente
-const huerfanos = function (coleccion, campo, destino) {
-  return db.getCollection(coleccion).aggregate([
-    { $lookup: { from: destino, localField: campo, foreignField: "_id", as: "ref", pipeline: [{ $project: { _id: 1 } }] } },
-    { $match: { ref: { $size: 0 } } },
-    { $count: "n" },
-  ]).toArray()[0]?.n ?? 0;
-}
 const revisar = function (descripcion, n) {
   print(`    ${n === 0 ? "✓" : "✗"} ${descripcion}: ${fmt(n)} sin referencia válida`);
-}
+};
+
+// Referencias simples: $lookup trae el documento referenciado en "ref".
+// Si "ref" queda vacío ([]), la referencia apunta a un documento que no existe.
+const huerfanos = function (coleccion, campo, destino) {
+  return db.getCollection(coleccion).aggregate([
+    { $lookup: { from: destino, localField: campo, foreignField: "_id", as: "ref" } },
+    { $match: { ref: [] } },
+  ]).toArray().length;
+};
 revisar("reviews.media_id → media", huerfanos("reviews", "media_id", "media"));
 revisar("reviews.user_id → users", huerfanos("reviews", "user_id", "users"));
 
-// En arrays se desarma primero con $unwind para revisar cada elemento
-const huerfanosArray = function (coleccion, array, campo, destino) {
-  return db.getCollection(coleccion).aggregate([
-    { $unwind: `$${array}` },
-    { $group: { _id: `$${array}${campo ? "." + campo : ""}` } },
-    { $lookup: { from: destino, localField: "_id", foreignField: "_id", as: "ref", pipeline: [{ $project: { _id: 1 } }] } },
-    { $match: { ref: { $size: 0 } } },
-    { $count: "n" },
-  ]).toArray()[0]?.n ?? 0;
+// Referencias dentro de arrays: se juntan todos los ids referenciados (sin
+// repetir) y se cuenta cuántos existen en la colección destino con $in.
+const faltantes = function (ids, destino) {
+  const lista = [...ids.values()];
+  return lista.length - db.getCollection(destino).countDocuments({ _id: { $in: lista } });
+};
+const generos = new Map(), personas = new Map(), enListas = new Map();
+for (const m of db.media.find({}, { genre_ids: 1, cast: 1, directors: 1 }).toArray()) {
+  for (const g of m.genre_ids) generos.set(g, g);
+  for (const p of [...m.cast, ...m.directors]) personas.set(p.person_id.toString(), p.person_id);
 }
-revisar("media.genre_ids → genres", huerfanosArray("media", "genre_ids", null, "genres"));
-revisar("media.cast.person_id → people", huerfanosArray("media", "cast", "person_id", "people"));
-revisar("media.directors.person_id → people", huerfanosArray("media", "directors", "person_id", "people"));
-revisar("users.watchlist → media", huerfanosArray("users", "watchlist", null, "media"));
+for (const u of db.users.find({}, { watchlist: 1 }).toArray()) {
+  for (const id of u.watchlist) enListas.set(id.toString(), id);
+}
+revisar("media.genre_ids → genres", faltantes(generos, "genres"));
+revisar("media.cast / directors → people", faltantes(personas, "people"));
+revisar("users.watchlist → media", faltantes(enListas, "media"));
 
-// views es grande: se revisan los ids distintos, no cada documento
+// views es grande: $group obtiene los ids distintos y se revisan esos
 for (const [campo, destino] of [["media_id", "media"], ["meta.user_id", "users"]]) {
-  const ids = db.views.distinct(campo);
-  const existentes = db.getCollection(destino).countDocuments({ _id: { $in: ids } });
-  revisar(`views.${campo} → ${destino}`, ids.length - existentes);
+  const ids = new Map();
+  db.views.aggregate([{ $group: { _id: "$" + campo } }]).forEach((d) => ids.set(d._id.toString(), d._id));
+  revisar(`views.${campo} → ${destino}`, faltantes(ids, destino));
 }
 
-// rating calculado coincide con las reseñas (muestra de 3 títulos)
-const muestra = db.media.aggregate([{ $match: { "rating.count": { $gt: 0 } } }, { $sample: { size: 3 } }]).toArray();
+// rating calculado coincide con las reseñas (los 3 títulos con más reseñas)
+const muestra = db.media.find({}, { rating: 1 }).sort({ "rating.count": -1 }).limit(3).toArray();
 let ratingsOk = 0;
 for (const m of muestra) {
-  const real = db.reviews.aggregate([{ $match: { media_id: m._id } }, { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } }]).toArray()[0];
+  const real = db.reviews.aggregate([
+    { $match: { media_id: m._id } },
+    { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } },
+  ]).toArray()[0];
   if (Math.round(real.avg * 10) / 10 === m.rating.avg && real.count === m.rating.count) ratingsOk++;
 }
 print(`    ${ratingsOk === muestra.length ? "✓" : "✗"} media.rating coincide con reviews (${ratingsOk}/${muestra.length} títulos de muestra)`);

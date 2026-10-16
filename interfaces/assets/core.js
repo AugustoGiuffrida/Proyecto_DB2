@@ -117,12 +117,12 @@ function renderNav(active) {
         ${link("perfil.html", "Mi lista", "profile")}
       </div>
       <div class="nav-right">
-        <label class="search" ${ann({ col: "media", title: "Barra de búsqueda", short: 'find({ $text: { $search: "…" } })',
+        <label class="search" ${ann({ col: "media", title: "Barra de búsqueda", short: 'find({ title: /…/i })',
           q: `db.media.find(
-  { $text: { $search: "eternauta" } },
-  { score: { $meta: "textScore" }, title: 1, poster: 1, release_year: 1 }
-).sort({ score: { $meta: "textScore" } }).limit(8)`,
-          why: "Búsqueda por título usando el índice de texto sobre title y original_title. Se proyectan solo los campos que muestra el desplegable de resultados.",
+  { title: /eternauta/i },   // expresión regular, sin distinguir mayúsculas
+  { title: 1, poster: 1, release_year: 1 }
+).limit(8)`,
+          why: "Búsqueda por título con una expresión regular. Se proyectan solo los campos que muestra el desplegable de resultados.",
           docs: () => [] }).attr}>
           ${ICON.search}<input placeholder="Títulos, personas, géneros" aria-label="Buscar">
         </label>
