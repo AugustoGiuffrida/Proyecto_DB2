@@ -160,8 +160,8 @@ print("\n▸ 6.8 Registrar una reproducción de El Eternauta, episodio 5");
 const sesion = { ts: new Date(), meta: { user_id: IDS.cinefan }, media_id: IDS.eternauta,
                  episode: { season: 1, number: 5 }, minutes: 58, completed: true };
 db.views.insertOne(sesion);
-const ultima = db.views.find({ "meta.user_id": IDS.cinefan }).sort({ ts: -1 }).limit(1).toArray()[0];
+const ultima = db.views.find({ meta: { user_id: IDS.cinefan } }).sort({ ts: -1 }).limit(1).toArray()[0];
 print(`    última sesión del usuario: ${linea({ ts: ultima.ts, episode: ultima.episode, minutes: ultima.minutes })}`);
-r = db.views.deleteOne({ "meta.user_id": IDS.cinefan, ts: sesion.ts });
+r = db.views.deleteOne({ meta: { user_id: IDS.cinefan }, ts: sesion.ts });
 print(`    deshecho → ${r.deletedCount} documento borrado`);
 }

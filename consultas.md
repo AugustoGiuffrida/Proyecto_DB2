@@ -88,13 +88,13 @@ db.genres.find({}, { name: 1, color: 1 }).sort({ name: 1 })
 ### 1.3 Seguir viendo
 
 Se resuelve entre la base y la aplicación:
-1. La base devuelve las sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja.
+1. La base devuelve las sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja. Se filtra comparando el subdocumento `meta` completo, `{ meta: { user_id: … } }`: así MongoDB usa el índice que crea automáticamente en la serie temporal (`meta_1_ts_1`). Ver [`rendimiento.md`](rendimiento.md).
 2. La aplicación recorre la lista y se queda con la **primera** sesión de cada título, que es la más reciente. Si no está terminada, va a "Seguir viendo".
 3. Con `$in` se traen los nombres de esos títulos en una sola consulta.
 
 ```js
 const sesiones = db.views.find(
-  { "meta.user_id": ObjectId("665f0c000000000000000001"),
+  { meta: { user_id: ObjectId("665f0c000000000000000001") },
     ts: { $gte: ISODate("2026-09-06T12:00:00Z") } },
   { media_id: 1, ts: 1, episode: 1, minutes: 1, completed: 1 }
 ).sort({ ts: -1 }).toArray()
@@ -257,7 +257,7 @@ Filtra por el usuario (el `metaField` de la serie temporal) y ordena por fecha (
 
 ```js
 db.views.find(
-  { "meta.user_id": ObjectId("665f0c000000000000000001"), media_id: ObjectId("665f0a000000000000000010") },
+  { meta: { user_id: ObjectId("665f0c000000000000000001") }, media_id: ObjectId("665f0a000000000000000010") },
   { _id: 0, ts: 1, episode: 1, minutes: 1, completed: 1 }
 ).sort({ ts: -1 }).limit(1)
 ```
@@ -471,7 +471,7 @@ Lo "visto" no se guarda como una lista en `users`: sale de la serie temporal `vi
 
 ```js
 db.views.aggregate([
-  { $match: { "meta.user_id": ObjectId("665f0c000000000000000001"),
+  { $match: { meta: { user_id: ObjectId("665f0c000000000000000001") },
               ts: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
   { $sort: { ts: -1 } },
   { $lookup: { from: "media", localField: "media_id", foreignField: "_id", as: "media" } },
@@ -490,7 +490,7 @@ db.views.aggregate([
 
 ```js
 db.views.aggregate([
-  { $match: { "meta.user_id": ObjectId("665f0c000000000000000001"),
+  { $match: { meta: { user_id: ObjectId("665f0c000000000000000001") },
               ts: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
   { $group: { _id: null, minutos: { $sum: "$minutes" }, sesiones: { $sum: 1 } } },
   { $project: { _id: 0, sesiones: 1, horas: { $divide: ["$minutos", 60] } } }

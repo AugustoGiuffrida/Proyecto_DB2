@@ -19,6 +19,7 @@ Como vimos en la clase de modelado, en MongoDB **primero se diseña la aplicaci�
 1. **Interfaces** → [`interfaces/`](interfaces/): prototipo navegable de las 5 pantallas.
 2. **Modelo** → [`colecciones.md`](colecciones.md): 6 colecciones, decisiones de embeber o referenciar, relaciones, patrones e índices previstos.
 3. **Consultas** → [`consultas.md`](consultas.md): todas las consultas de la aplicación por pantalla, más escrituras y reportes analíticos, con resultados reales. Los scripts ejecutables están en [`consultas/`](consultas/) (`mongosh consultas/todas.js`).
+4. **Rendimiento** → [`rendimiento.md`](rendimiento.md): cada consulta medida con `explain("executionStats")` sin índice y con índice, más el costo de los índices en espacio y en escrituras (`mongosh rendimiento/medir.js`).
 
 ## Pantallas
 
@@ -86,7 +87,7 @@ Crea la base **`fotograma`** desde cero (borra la anterior si existe). En una PC
 - [x] Creación de la base, validación de esquemas y carga masiva de datos
 - [x] Índices
 - [x] Consultas avanzadas ([`consultas.md`](consultas.md))
-- [ ] Medición de rendimiento (`explain("executionStats")` con y sin índices)
+- [x] Medición de rendimiento ([`rendimiento.md`](rendimiento.md))
 - [ ] Política de backup y restauración
 
 > `guia.md` corresponde al modelo anterior (3 colecciones) y se va a rehacer junto con la política de backup.

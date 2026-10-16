@@ -44,6 +44,7 @@ La teoría vista (clases en `../Teoria_mongo/*.ppsx`) cubre:
 | `db/` | Scripts de mongosh que crean y cargan la base (ver `README.md`) |
 | `consultas.md` | Todas las consultas (por pantalla, escrituras y analítica) con explicación y resultados reales. Es el documento de referencia |
 | `consultas/` | Las mismas consultas como scripts de mongosh (`mongosh consultas/todas.js`). `6_escritura.js` deshace sus cambios al final |
+| `rendimiento.md`, `rendimiento/medir.js` | Medición de cada consulta sin y con su índice (`explain("executionStats")`), costo en espacio e inserciones, y decisiones sobre los índices |
 | `guia.md` | **Desactualizado** (modelo anterior de 3 colecciones). Se rehace con la política de backup |
 
 ## Modelo (resumen)
@@ -61,6 +62,7 @@ Base **`fotograma`**, con 6 colecciones:
 - **`reviews`:** colección propia (1:N sin límite) con una copia de `username` y `avatar`. Hay un índice único en `{ media_id, user_id }`.
 - **`views`:** serie temporal con `timeField: ts`, `metaField: meta = { user_id }` y `granularity: "hours"`. `media_id` es un campo de medición.
   - Con `meta = { user_id, media_id }` se generaba casi un bucket por documento. La medición está en `colecciones.md`.
+  - Las consultas por usuario filtran con `{ meta: { user_id: X } }` (subdocumento completo) para usar el índice automático `meta_1_ts_1`; no hay otro índice en `views`.
 
 ## Base de datos local
 
@@ -70,7 +72,7 @@ Base **`fotograma`**, con 6 colecciones:
 - **PC Linux (andromeda):** también usa el contenedor de Docker (el servicio `mongod` nativo está deshabilitado). mongosh y las database tools sí están instalados en el host, así que se puede correr `mongosh` directo contra `localhost:27017`. En algunas redes el puerto 22 está bloqueado y `git pull/push` se cuelga: usar SSH por el puerto 443 (`ssh.github.com`).
 - **Volúmenes:** se definen en `db/config.js`. Valores actuales: 4.000 personas, 3.000 títulos, 10.000 usuarios, 150.000 reseñas y 1.000.000 de reproducciones.
 - **Reproducibilidad:** el generador usa una semilla fija (`CONFIG.semilla`) y una fecha "hoy" fija (`CONFIG.hoy` = 2026-10-06).
-- **Índices:** están definidos en `db/04_indices.js` (`globalThis.INDICES`) y todos tienen nombre, para poder usar `dropIndex` en las pruebas de rendimiento.
+- **Índices:** `db/04_indices.js` los crea con un `createIndex(claves, { name })` explícito por índice, como en la clase. `rendimiento/medir.js` guarda la lista con `getIndexes()` antes de borrarlos y los recrea al final.
 
 ### Particularidades de mongosh
 
@@ -80,6 +82,5 @@ Base **`fotograma`**, con 6 colecciones:
 
 ## Próximos pasos
 
-1. Medición de rendimiento: `explain("executionStats")` con y sin cada índice, sobre las consultas de `consultas.md`, en tablas.
-2. Política de backup: `mongodump`/`mongorestore`, `mongoexport`, frecuencia, retención y prueba de restauración. Rehacer `guia.md`.
-3. Documento de requisitos (funcionales y no funcionales).
+1. Política de backup: `mongodump`/`mongorestore`, `mongoexport`, frecuencia, retención y prueba de restauración. Rehacer `guia.md`.
+2. Documento de requisitos (funcionales y no funcionales).

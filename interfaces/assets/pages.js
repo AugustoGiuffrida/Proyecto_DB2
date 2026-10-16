@@ -78,9 +78,9 @@ db.genres.find().sort({ name: 1 })`,
   </section>
 
   ${cont.length ? `
-  <section class="section" ${ann({ col: ["views", "media"], title: "Seguir viendo", short: "find({ meta.user_id, ts: { $gte } }).sort({ ts: -1 })",
+  <section class="section" ${ann({ col: ["views", "media"], title: "Seguir viendo", short: "find({ meta: { user_id }, ts: { $gte } }).sort({ ts: -1 })",
     q: `// 1) sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja
-db.views.find({ "meta.user_id": ${oid(ME._id)},
+db.views.find({ meta: { user_id: ${oid(ME._id)} },
                 ts: { $gte: ISODate("${isoDaysAgo(30)}") } })
   .sort({ ts: -1 })
 
@@ -309,12 +309,12 @@ db.media.updateOne({ _id: ${oid(m._id)} },
         </div>
       </div>
       ${lastView ? `
-      <div class="panel" ${ann({ col: "views", title: "Tu última reproducción", short: 'find({ "meta.user_id", media_id }).sort({ ts: -1 })',
-        q: `db.views.find({ "meta.user_id": ${oid(ME._id)},
+      <div class="panel" ${ann({ col: "views", title: "Tu última reproducción", short: 'find({ meta: { user_id }, media_id }).sort({ ts: -1 })',
+        q: `db.views.find({ meta: { user_id: ${oid(ME._id)} },
                 media_id: ${oid(m._id)} })
   .sort({ ts: -1 })
   .limit(1)`,
-        why: "Filtra por el metaField (el usuario) y ordena por el timeField: es el patrón de acceso típico de una colección de series temporales.",
+        why: "Filtra por el metaField (el usuario) y ordena por el timeField: es el patrón de acceso típico de una serie temporal. Comparar el subdocumento meta completo permite usar el índice que MongoDB crea automáticamente (meta_1_ts_1).",
         docs: () => [lastView] }).attr}>
         <h3>Tu actividad</h3>
         <div style="font-weight:600">${esc(viewLabel(lastView, m))}</div>
@@ -524,7 +524,7 @@ function renderProfile(app) {
       </div>
       <div class="stats" style="margin:0" ${ann({ col: "views", title: "Horas vistas en el último mes", short: "aggregate: $match → $group $sum minutes",
         q: `db.views.aggregate([
-  { $match: { "meta.user_id": ${oid(ME._id)},
+  { $match: { meta: { user_id: ${oid(ME._id)} },
               ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
   { $group: { _id: null,
               minutos: { $sum: "$minutes" },
@@ -566,7 +566,7 @@ function renderProfile(app) {
       myViews.forEach((v) => (days[v.ts.slice(0, 10)] ??= []).push(v));
       return `<div ${ann({ col: ["views", "media"], title: "Historial de reproducción", short: "aggregate: $match ts → $sort → $lookup",
         q: `db.views.aggregate([
-  { $match: { "meta.user_id": ${oid(ME._id)},
+  { $match: { meta: { user_id: ${oid(ME._id)} },
               ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
   { $sort: { ts: -1 } },
   { $lookup: { from: "media", localField: "media_id",

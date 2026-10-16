@@ -254,7 +254,7 @@ Con casi un bucket por documento la serie temporal no tenía ningún beneficio: 
 
 \* El espacio en disco varía entre corridas según cuándo WiredTiger compacta los archivos; la cantidad de buckets y el tamaño de los datos son estables.
 
-**Índices previstos:** MongoDB crea automáticamente un índice sobre `meta` + `ts`. Se agrega `{ "meta.user_id": 1, ts: -1 }` para el historial y "Seguir viendo".
+**Índices:** solo el que MongoDB crea automáticamente sobre `meta` + `ts` (`meta_1_ts_1`). Para que lo use, las consultas por usuario comparan el subdocumento completo: `{ meta: { user_id: X } }`. Con `{ "meta.user_id": X }` no lo usaría (medido en [`rendimiento.md`](rendimiento.md)).
 
 ---
 
