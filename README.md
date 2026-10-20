@@ -19,7 +19,7 @@ Como vimos en la clase de modelado, en MongoDB **primero se diseña la aplicaci�
 1. **Interfaces** → [`interfaces/`](interfaces/): prototipo navegable de las 5 pantallas.
 2. **Modelo** → [`colecciones.md`](colecciones.md): 6 colecciones, decisiones de embeber o referenciar, relaciones, patrones e índices previstos.
 3. **Consultas** → [`consultas.md`](consultas.md): todas las consultas de la aplicación por pantalla, más escrituras y reportes analíticos, con resultados reales. Los scripts ejecutables están en [`consultas/`](consultas/) (`mongosh consultas/todas.js`).
-4. **Rendimiento** → [`rendimiento.md`](rendimiento.md): cada consulta medida con `explain("executionStats")` sin índice y con índice, más el costo de los índices en espacio y en escrituras (`mongosh rendimiento/medir.js`).
+4. **Rendimiento** → [`rendimiento.md`](rendimiento.md): comandos para crear, listar y eliminar los índices (`createIndex`, `getIndexes`, `dropIndex`) y `executionTimeMillis` de cada consulta sin índice y con índice (`mongosh rendimiento/medir.js`).
 
 ## Pantallas
 

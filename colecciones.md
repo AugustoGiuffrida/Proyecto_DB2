@@ -96,7 +96,6 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
 **Índices previstos**
 | Índice | Para |
 |---|---|
-| `{ title: 1 }` | barra de búsqueda y orden alfabético |
 | `{ genre_ids: 1, type: 1, "rating.avg": -1 }` | página de género y carruseles por género (multikey) |
 | `{ type: 1, "rating.avg": -1 }` | "Series para maratonear", filtros Películas/Series |
 | `{ created_at: -1 }` | "Recién agregadas" |

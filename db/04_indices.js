@@ -22,9 +22,6 @@ db = db.getSiblingDB(CONFIG.dbName);
 titulo("Creando índices");
 
 // ----------------------------------------------------------------------- media
-// Barra de búsqueda ("empieza con…") y orden alfabético
-db.media.createIndex({ title: 1 }, { name: "media_titulo" });
-
 // Página de género y carruseles por género.
 // Compuesto: primero los campos de igualdad (género, tipo) y al final el de
 // orden (rating). genre_ids es un array, así que el índice es multikey.

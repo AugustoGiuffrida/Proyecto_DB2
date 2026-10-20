@@ -44,7 +44,7 @@ La teoría vista (clases en `../Teoria_mongo/*.ppsx`) cubre:
 | `db/` | Scripts de mongosh que crean y cargan la base (ver `README.md`) |
 | `consultas.md` | Todas las consultas (por pantalla, escrituras y analítica) con explicación y resultados reales. Es el documento de referencia |
 | `consultas/` | Las mismas consultas como scripts de mongosh (`mongosh consultas/todas.js`). `6_escritura.js` deshace sus cambios al final |
-| `rendimiento.md`, `rendimiento/medir.js` | Medición de cada consulta sin y con su índice (`explain("executionStats")`), costo en espacio e inserciones, y decisiones sobre los índices |
+| `rendimiento.md`, `rendimiento/medir.js` | Comandos `createIndex` / `getIndexes` / `dropIndex` y `explain("executionStats").executionStats.executionTimeMillis` de cada consulta sin y con índice. Formato simple, como en la clase |
 | `guia.md` | **Desactualizado** (modelo anterior de 3 colecciones). Se rehace con la política de backup |
 
 ## Modelo (resumen)
@@ -70,7 +70,7 @@ Base **`fotograma`**, con 6 colecciones:
 - **PC Linux (andromeda):** también usa el contenedor de Docker (el servicio `mongod` nativo está deshabilitado). mongosh y las database tools sí están instalados en el host, así que se puede correr `mongosh` directo contra `localhost:27017`. En algunas redes el puerto 22 está bloqueado y `git pull/push` se cuelga: usar SSH por el puerto 443 (`ssh.github.com`).
 - **Volúmenes:** se definen en `db/config.js`. Valores actuales: 4.000 personas, 3.000 títulos, 10.000 usuarios, 150.000 reseñas y 1.000.000 de reproducciones.
 - **Reproducibilidad:** el generador usa una semilla fija (`CONFIG.semilla`) y una fecha "hoy" fija (`CONFIG.hoy` = 2026-10-06).
-- **Índices:** `db/04_indices.js` los crea con un `createIndex(claves, { name })` explícito por índice, como en la clase. `rendimiento/medir.js` guarda la lista con `getIndexes()` antes de borrarlos y los recrea al final.
+- **Índices:** `db/04_indices.js` los crea con un `createIndex(claves, { name })` explícito por índice, como en la clase. `rendimiento/medir.js` los elimina con `dropIndex`, mide, y los vuelve a crear con los mismos `createIndex`.
 
 ### Particularidades de mongosh
 
