@@ -103,7 +103,7 @@ Los números se repitieron en varias corridas, con diferencias menores al 10 % (
 - ordenar en memoria las sesiones del usuario,
 - devolver 69.
 
-Con `views_por_usuario` (`{ user_id: 1, ts: -1 }`) se leen **exactamente las 69 sesiones** del usuario, ya ordenadas por fecha. El tiempo baja de 282 ms a 1,2 ms: es **235 veces más rápido**.
+Con `views_por_usuario` (`{ user_id: 1, started_at: -1 }`) se leen **exactamente las 69 sesiones** del usuario, ya ordenadas por fecha. El tiempo baja de 282 ms a 1,2 ms: es **235 veces más rápido**.
 
 Lo mismo pasa en `reviews` (150.000 documentos): las reseñas de un título bajan de 150.012 documentos leídos a 10, y de 45 ms a 0,5 ms (90 veces más rápido). "Mis reseñas" es 23 veces más rápido.
 
@@ -140,7 +140,7 @@ Conclusión: la barra de búsqueda puede usar el índice si busca "títulos que 
 
 ### 6. Un índice no siempre evita leer mucho: el Top 10 de la semana
 
-El Top 10 cuenta **todas** las reproducciones de los últimos 7 días. Con `views_por_fecha` (`{ ts: -1 }`) MongoDB lee solo las de esa semana (96.273) en vez del millón completo, y el tiempo baja de 196 a 71 ms (2,7 veces más rápido).
+El Top 10 cuenta **todas** las reproducciones de los últimos 7 días. Con `views_por_fecha` (`{ started_at: -1 }`) MongoDB lee solo las de esa semana (96.273) en vez del millón completo, y el tiempo baja de 196 a 71 ms (2,7 veces más rápido).
 
 La mejora es menor que en el historial porque la consulta necesita, de verdad, casi 100.000 documentos para poder sumarlos. El índice evita leer los otros 900.000, pero no puede evitar leer los que hacen falta. Si el Top 10 se mostrara a muchos usuarios a la vez, convendría calcularlo una vez por hora y guardar el resultado, igual que se hace con `media.rating` (patrón computado).
 
@@ -157,9 +157,11 @@ Como planteamos en clase, un índice acelera las lecturas pero se paga en espaci
 | `media` | 4,1 MB | 0,5 MB | 7 índices, cada uno entre 0,03 y 0,13 MB |
 | `users` | 7,0 MB | 0,6 MB | `email` 0,27 MB · `username` 0,16 MB |
 | `reviews` | 33,1 MB | 7,9 MB | `_id` 1,46 · `por_usuario` 2,58 · `por_titulo` 2,36 · `titulo_usuario_unico` 1,47 MB |
-| `views` | 106,9 MB | **38,3 MB** | `_id` 10,64 · `por_usuario` 17,03 · `por_fecha` 10,67 MB |
+| `views` | 114,5 MB | **37,1 MB** | `_id` 9,38 · `por_usuario` 17,04 · `por_fecha` 10,67 MB |
 
-En `views` y en `reviews` los índices ocupan entre el 24 % y el 36 % de lo que ocupan los datos. Es el precio de que las consultas sobre esas colecciones pasen de cientos de milisegundos a uno.
+En `views` y en `reviews` los índices ocupan entre el 24 % y el 32 % de lo que ocupan los datos. Es el precio de que las consultas sobre esas colecciones pasen de cientos de milisegundos a uno.
+
+**El nombre de los campos también ocupa lugar.** MongoDB guarda el nombre de cada campo dentro de cada documento. Al renombrar `ts` a `started_at` (8 letras más), `views` pasó de 106,9 a 114,5 MB: unos 8 bytes más por cada uno del millón de documentos. Se eligió igual el nombre largo porque se entiende sin explicación, y la diferencia es chica para este tamaño.
 
 ### Escrituras
 

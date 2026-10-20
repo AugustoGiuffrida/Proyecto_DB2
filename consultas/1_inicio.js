@@ -35,9 +35,9 @@ mostrar("1.2 Catálogo de géneros", () =>
 // primera sesión de cada título: si no está terminada, va a "Seguir viendo".
 // -----------------------------------------------------------------------------
 const sesiones = db.views.find(
-  { user_id: IDS.cinefan, ts: { $gte: haceDias(30) } },
-  { media_id: 1, ts: 1, episode: 1, minutes: 1, completed: 1 }
-).sort({ ts: -1 }).toArray();
+  { user_id: IDS.cinefan, started_at: { $gte: haceDias(30) } },
+  { media_id: 1, started_at: 1, episode: 1, minutes: 1, completed: 1 }
+).sort({ started_at: -1 }).toArray();
 
 const yaVisto = {};
 const seguirViendo = [];
@@ -54,7 +54,7 @@ db.media.find({ _id: { $in: seguirViendo.map((s) => s.media_id) } }, { title: 1 
   .forEach((m) => { nombres[m._id.toString()] = m.title; });
 
 mostrar("1.3 Seguir viendo (CineFan88)", () =>
-  seguirViendo.slice(0, 10).map((s) => ({ titulo: nombres[s.media_id.toString()], ts: s.ts, minutos: s.minutes, ...(s.episode && { episodio: s.episode }) }))
+  seguirViendo.slice(0, 10).map((s) => ({ titulo: nombres[s.media_id.toString()], started_at: s.started_at, minutos: s.minutes, ...(s.episode && { episodio: s.episode }) }))
 );
 
 // -----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ mostrar("1.3 Seguir viendo (CineFan88)", () =>
 // -----------------------------------------------------------------------------
 mostrar("1.4 Top 10 de la semana", () =>
   db.views.aggregate([
-    { $match: { ts: { $gte: haceDias(7) } } },
+    { $match: { started_at: { $gte: haceDias(7) } } },
     { $group: { _id: "$media_id", reproducciones: { $sum: 1 } } },
     { $sort: { reproducciones: -1 } },
     { $limit: 10 },

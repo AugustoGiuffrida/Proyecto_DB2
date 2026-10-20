@@ -61,10 +61,10 @@ db.reviews.createIndex({ media_id: 1, user_id: 1 }, { name: "reviews_titulo_usua
 
 // ----------------------------------------------------------------------- views
 // Historial, "Seguir viendo" y horas vistas de un usuario
-db.views.createIndex({ user_id: 1, ts: -1 }, { name: "views_por_usuario" });
+db.views.createIndex({ user_id: 1, started_at: -1 }, { name: "views_por_usuario" });
 
 // "Top 10 de la semana": reproducciones de un rango de fechas
-db.views.createIndex({ ts: -1 }, { name: "views_por_fecha" });
+db.views.createIndex({ started_at: -1 }, { name: "views_por_fecha" });
 
 // -----------------------------------------------------------------------------
 print("\n  Índices por colección (getIndexes):");

@@ -198,11 +198,11 @@ paso("reviews");
 // -----------------------------------------------------------------------------
 db.createCollection("views", validacion({
   bsonType: "object",
-  required: ["user_id", "media_id", "ts", "minutes", "completed"],
+  required: ["user_id", "media_id", "started_at", "minutes", "completed"],
   properties: {
     user_id: { bsonType: "objectId" },
     media_id: { bsonType: "objectId" },
-    ts: { bsonType: "date" },
+    started_at: { bsonType: "date" },
     episode: {                                   // solo si es una serie
       bsonType: "object",
       required: ["season", "number"],

@@ -51,7 +51,7 @@ Las consultas usan documentos semilla, que vienen del prototipo y tienen `_id` f
 | **Ricardo Darín** | `ObjectId("665f0b000000000000000010")` |
 | **Christopher Nolan** | `ObjectId("665f0b000000000000000001")` |
 
-Los datos se generaron con **"hoy" = 6 de octubre de 2026** (`db/config.js`). Por eso "últimos 30 días" es `ts >= ISODate("2026-09-06T12:00:00Z")`.
+Los datos se generaron con **"hoy" = 6 de octubre de 2026** (`db/config.js`). Por eso "últimos 30 días" es `started_at >= ISODate("2026-09-06T12:00:00Z")`.
 
 ---
 
@@ -95,9 +95,9 @@ Se resuelve entre la base y la aplicación:
 ```js
 const sesiones = db.views.find(
   { user_id: ObjectId("665f0c000000000000000001"),
-    ts: { $gte: ISODate("2026-09-06T12:00:00Z") } },
-  { media_id: 1, ts: 1, episode: 1, minutes: 1, completed: 1 }
-).sort({ ts: -1 }).toArray()
+    started_at: { $gte: ISODate("2026-09-06T12:00:00Z") } },
+  { media_id: 1, started_at: 1, episode: 1, minutes: 1, completed: 1 }
+).sort({ started_at: -1 }).toArray()
 
 const yaVisto = {}
 const seguirViendo = []
@@ -111,9 +111,9 @@ for (const s of sesiones) {
 db.media.find({ _id: { $in: seguirViendo.map((s) => s.media_id) } }, { title: 1 })
 ```
 ```js
-{ titulo: "El pacto blanco",    ts: 2026-10-06 03:33, minutos: 56 }
-{ titulo: "Guerra prohibida",   ts: 2026-10-04 01:14, minutos: 21, episodio: { season: 1, number: 11 } }
-{ titulo: "El Eternauta",       ts: 2026-10-03 23:10, minutos: 32, episodio: { season: 1, number: 4 } }
+{ titulo: "El pacto blanco",    started_at: 2026-10-06 03:33, minutos: 56 }
+{ titulo: "Guerra prohibida",   started_at: 2026-10-04 01:14, minutos: 21, episodio: { season: 1, number: 11 } }
+{ titulo: "El Eternauta",       started_at: 2026-10-03 23:10, minutos: 32, episodio: { season: 1, number: 4 } }
 …  // 10 títulos
 ```
 
@@ -128,7 +128,7 @@ Cada etapa del `aggregate` hace una cosa:
 
 ```js
 db.views.aggregate([
-  { $match: { ts: { $gte: ISODate("2026-09-29T12:00:00Z") } } },
+  { $match: { started_at: { $gte: ISODate("2026-09-29T12:00:00Z") } } },
   { $group: { _id: "$media_id", reproducciones: { $sum: 1 } } },
   { $sort: { reproducciones: -1 } },
   { $limit: 10 },
@@ -253,16 +253,16 @@ db.users.countDocuments({ _id: ObjectId("665f0c000000000000000001"),
 
 ### 2.4 Última reproducción del usuario
 
-Filtra por usuario y título, y ordena por fecha. Usa el índice `views_por_usuario` (`{ user_id: 1, ts: -1 }`).
+Filtra por usuario y título, y ordena por fecha. Usa el índice `views_por_usuario` (`{ user_id: 1, started_at: -1 }`).
 
 ```js
 db.views.find(
   { user_id: ObjectId("665f0c000000000000000001"), media_id: ObjectId("665f0a000000000000000010") },
-  { _id: 0, ts: 1, episode: 1, minutes: 1, completed: 1 }
-).sort({ ts: -1 }).limit(1)
+  { _id: 0, started_at: 1, episode: 1, minutes: 1, completed: 1 }
+).sort({ started_at: -1 }).limit(1)
 ```
 ```js
-{ ts: 2026-10-03 23:10, episode: { season: 1, number: 4 }, minutes: 32, completed: false }
+{ started_at: 2026-10-03 23:10, episode: { season: 1, number: 4 }, minutes: 32, completed: false }
 ```
 
 ### 2.5 Títulos similares
@@ -472,15 +472,15 @@ Lo "visto" no se guarda como una lista en `users`: sale de la colección `views`
 ```js
 db.views.aggregate([
   { $match: { user_id: ObjectId("665f0c000000000000000001"),
-              ts: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
-  { $sort: { ts: -1 } },
+              started_at: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
+  { $sort: { started_at: -1 } },
   { $lookup: { from: "media", localField: "media_id", foreignField: "_id", as: "media" } },
-  { $project: { _id: 0, ts: 1, "media.title": 1, episode: 1, minutes: 1, completed: 1 } }
+  { $project: { _id: 0, started_at: 1, "media.title": 1, episode: 1, minutes: 1, completed: 1 } }
 ])
 ```
 ```js
-{ ts: 2026-10-06 03:33, minutes: 56, completed: false, media: [{ title: "El pacto blanco" }] }
-{ ts: 2026-10-06 03:20, minutes: 27, completed: true, episode: { season: 1, number: 5 }, media: [{ title: "Fuga blanca" }] }
+{ started_at: 2026-10-06 03:33, minutes: 56, completed: false, media: [{ title: "El pacto blanco" }] }
+{ started_at: 2026-10-06 03:20, minutes: 27, completed: true, episode: { season: 1, number: 5 }, media: [{ title: "Fuga blanca" }] }
 …  // 69 sesiones
 ```
 
@@ -491,7 +491,7 @@ db.views.aggregate([
 ```js
 db.views.aggregate([
   { $match: { user_id: ObjectId("665f0c000000000000000001"),
-              ts: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
+              started_at: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
   { $group: { _id: null, minutos: { $sum: "$minutes" }, sesiones: { $sum: 1 } } },
   { $project: { _id: 0, sesiones: 1, horas: { $divide: ["$minutos", 60] } } }
 ])
@@ -662,7 +662,7 @@ Cada reproducción es un documento nuevo en `views`.
 db.views.insertOne({
   user_id: ObjectId("665f0c000000000000000001"),
   media_id: ObjectId("665f0a000000000000000010"),
-  ts: new Date(),
+  started_at: new Date(),
   episode: { season: 1, number: 5 },
   minutes: 58,
   completed: true
@@ -766,7 +766,7 @@ db.users.aggregate([
 
 ```js
 db.views.aggregate([
-  { $match: { ts: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
+  { $match: { started_at: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
   { $group: { _id: "$user_id", minutos: { $sum: "$minutes" } } },
   { $sort: { minutos: -1 } },
   { $limit: 5 },

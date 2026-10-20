@@ -216,7 +216,7 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
   _id: ObjectId("…"),
   user_id: ObjectId("665f0c…01"),           // → users
   media_id: ObjectId("665f0a…10"),          // → media
-  ts: ISODate("2026-10-03T23:10:00Z"),      // cuándo empezó la sesión
+  started_at: ISODate("2026-10-03T23:10:00Z"),      // cuándo empezó la sesión
   episode: { season: 1, number: 4 },        // solo si es una serie
   minutes: 32,
   completed: false
@@ -228,7 +228,7 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
 - **Colección propia** porque es la que más crece (millones de documentos): cada vez que alguien reproduce algo se inserta un documento nuevo. Guardar esto dentro de `users` o de `media` haría crecer esos documentos sin límite.
 - Referencia a `users` y a `media` con `user_id` y `media_id`, como en `reviews`.
 - Alimenta cuatro secciones:
-  - "Top 10 de la semana": `$match` por `ts` y `$group` con `$sum`.
+  - "Top 10 de la semana": `$match` por `started_at` y `$group` con `$sum`.
   - "Seguir viendo": las sesiones del usuario ordenadas por fecha; la aplicación se queda con la más reciente de cada título.
   - Historial del perfil.
   - Horas vistas en el mes: `$sum` de `minutes`.
@@ -236,8 +236,8 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
 **Índices previstos**
 | Índice | Para |
 |---|---|
-| `{ user_id: 1, ts: -1 }` | historial, "Seguir viendo", horas vistas y última reproducción de un usuario |
-| `{ ts: -1 }` | "Top 10 de la semana" (reproducciones de un rango de fechas) |
+| `{ user_id: 1, started_at: -1 }` | historial, "Seguir viendo", horas vistas y última reproducción de un usuario |
+| `{ started_at: -1 }` | "Top 10 de la semana" (reproducciones de un rango de fechas) |
 
 ---
 

@@ -347,11 +347,11 @@ const generarVista = (inicioDia) => {
   for (;;) {
     const m = elegirTituloVista();
     const u = elegirUsuario();
-    const ts = new Date(inicioDia + (elegirHora() + 3) * 3600000 + azar.entero(0, 59) * 60000);
+    const started_at = new Date(inicioDia + (elegirHora() + 3) * 3600000 + azar.entero(0, 59) * 60000);
     // no puede ser futura ni anterior al alta del título o del usuario
-    if (ts.getTime() > hoyMs || ts < m.created_at || ts < u.created_at) continue;
+    if (started_at.getTime() > hoyMs || started_at < m.created_at || started_at < u.created_at) continue;
 
-    const doc = { user_id: u._id, media_id: m._id, ts };
+    const doc = { user_id: u._id, media_id: m._id, started_at };
     let duracion = m.runtime;
     if (m.type === "series") {
       // los primeros episodios se ven más que los últimos
@@ -384,7 +384,7 @@ cantidadDia[cantidadDia.length - 1] += N.views - cantidadDia.reduce((a, b) => a 
 for (let d = 0; d < CONFIG.diasDeViews; d++) {
   const cantidad = cantidadDia[d];
   const delDia = Array.from({ length: cantidad }, () => generarVista(primerDia + d * DIA));
-  delDia.sort((a, b) => a.ts - b.ts);
+  delDia.sort((a, b) => a.started_at - b.started_at);
   pendientes.push(...delDia);
   if (pendientes.length >= CONFIG.lote || d === CONFIG.diasDeViews - 1) {
     db.views.insertMany(pendientes, { ordered: false });

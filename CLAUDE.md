@@ -60,7 +60,7 @@ Base **`fotograma`**, con 6 colecciones:
 - **`people`:** actores y directores. Relación N:M con `media` mediante índices multikey.
 - **`users`:** `subscription` y `payment_methods` embebidos; `watchlist` con referencias a `media`. Lo "visto" se obtiene de `views`.
 - **`reviews`:** colección propia (1:N sin límite) con una copia de `username` y `avatar`. Hay un índice único en `{ media_id, user_id }`.
-- **`views`:** colección común (no serie temporal; se simplificó por tiempo): `{ user_id, media_id, ts, episode?, minutes, completed }`. Índices `views_por_usuario { user_id: 1, ts: -1 }` y `views_por_fecha { ts: -1 }`.
+- **`views`:** colección común (no serie temporal; se simplificó por tiempo): `{ user_id, media_id, started_at, episode?, minutes, completed }`. Índices `views_por_usuario { user_id: 1, started_at: -1 }` y `views_por_fecha { started_at: -1 }`.
 
 ## Base de datos local
 

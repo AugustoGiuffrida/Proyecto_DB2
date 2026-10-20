@@ -35,10 +35,10 @@ mostrar("5.2 Mi lista", () =>
 // -----------------------------------------------------------------------------
 mostrar("5.3 Historial (últimos 30 días)", () =>
   db.views.aggregate([
-    { $match: { user_id: IDS.cinefan, ts: { $gte: haceDias(30) } } },
-    { $sort: { ts: -1 } },
+    { $match: { user_id: IDS.cinefan, started_at: { $gte: haceDias(30) } } },
+    { $sort: { started_at: -1 } },
     { $lookup: { from: "media", localField: "media_id", foreignField: "_id", as: "media" } },
-    { $project: { _id: 0, ts: 1, "media.title": 1, episode: 1, minutes: 1, completed: 1 } },
+    { $project: { _id: 0, started_at: 1, "media.title": 1, episode: 1, minutes: 1, completed: 1 } },
   ])
 , { limite: 8 });
 
@@ -48,7 +48,7 @@ mostrar("5.3 Historial (últimos 30 días)", () =>
 // -----------------------------------------------------------------------------
 mostrar("5.4 Horas vistas en los últimos 30 días", () =>
   db.views.aggregate([
-    { $match: { user_id: IDS.cinefan, ts: { $gte: haceDias(30) } } },
+    { $match: { user_id: IDS.cinefan, started_at: { $gte: haceDias(30) } } },
     { $group: { _id: null, minutos: { $sum: "$minutes" }, sesiones: { $sum: 1 } } },
     { $project: { _id: 0, sesiones: 1, horas: { $divide: ["$minutos", 60] } } },
   ])

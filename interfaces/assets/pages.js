@@ -13,7 +13,7 @@ function continueWatching(userId) {
   const last = {};
   DB.views
     .filter((v) => v.user_id === userId)
-    .sort((a, b) => b.ts.localeCompare(a.ts))
+    .sort((a, b) => b.started_at.localeCompare(a.started_at))
     .forEach((v) => { last[v.media_id] ??= v; });
   return Object.values(last).filter((v) => !v.completed);
 }
@@ -78,11 +78,11 @@ db.genres.find().sort({ name: 1 })`,
   </section>
 
   ${cont.length ? `
-  <section class="section" ${ann({ col: ["views", "media"], title: "Seguir viendo", short: "find({ user_id, ts: { $gte } }).sort({ ts: -1 })",
+  <section class="section" ${ann({ col: ["views", "media"], title: "Seguir viendo", short: "find({ user_id, started_at: { $gte } }).sort({ started_at: -1 })",
     q: `// 1) sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja
 db.views.find({ user_id: ${oid(ME._id)},
-                ts: { $gte: ISODate("${isoDaysAgo(30)}") } })
-  .sort({ ts: -1 })
+                started_at: { $gte: ISODate("${isoDaysAgo(30)}") } })
+  .sort({ started_at: -1 })
 
 // 2) la aplicación recorre la lista y se queda con la primera sesión
 //    de cada título; si no está terminada, va a "Seguir viendo"
@@ -103,9 +103,9 @@ db.media.find({ _id: { $in: [ /* ids de los títulos */ ] } },
     </div>
   </section>` : ""}
 
-  <section class="section" ${ann({ col: ["views", "media"], title: "Top 10 de la semana", short: "aggregate: $match ts → $group $sum → $sort",
+  <section class="section" ${ann({ col: ["views", "media"], title: "Top 10 de la semana", short: "aggregate: $match started_at → $group $sum → $sort",
     q: `db.views.aggregate([
-  { $match: { ts: { $gte: ISODate("${isoDaysAgo(7)}") } } },
+  { $match: { started_at: { $gte: ISODate("${isoDaysAgo(7)}") } } },
   { $group: { _id: "$media_id", views: { $sum: 1 } } },
   { $sort: { views: -1 } },
   { $limit: 10 },
@@ -113,7 +113,7 @@ db.media.find({ _id: { $in: [ /* ids de los títulos */ ] } },
                foreignField: "_id", as: "media" } },
   { $project: { views: 1, "media.title": 1, "media.poster": 1 } }
 ])`,
-    why: "El ranking ya no es un número inventado guardado en media: se calcula sumando las reproducciones de los últimos 7 días. El índice views_por_fecha { ts: -1 } permite leer solo las reproducciones de ese rango.",
+    why: "El ranking ya no es un número inventado guardado en media: se calcula sumando las reproducciones de los últimos 7 días. El índice views_por_fecha { started_at: -1 } permite leer solo las reproducciones de ese rango.",
     docs: () => DB.trending_result, docsLabel: "Resultado del $group (antes del $lookup)", maxDocs: 4 }).attr}>
     <div class="section-head"><h2 class="section-title">Top 10 de la semana</h2><span class="section-sub">Según reproducciones de los últimos 7 días</span></div>
     <div class="row top">
@@ -309,17 +309,17 @@ db.media.updateOne({ _id: ${oid(m._id)} },
         </div>
       </div>
       ${lastView ? `
-      <div class="panel" ${ann({ col: "views", title: "Tu última reproducción", short: 'find({ user_id, media_id }).sort({ ts: -1 })',
+      <div class="panel" ${ann({ col: "views", title: "Tu última reproducción", short: 'find({ user_id, media_id }).sort({ started_at: -1 })',
         q: `db.views.find({ user_id: ${oid(ME._id)},
                 media_id: ${oid(m._id)} })
-  .sort({ ts: -1 })
+  .sort({ started_at: -1 })
   .limit(1)`,
-        why: "Filtra por usuario y título, y ordena por fecha: usa el índice views_por_usuario { user_id: 1, ts: -1 }.",
+        why: "Filtra por usuario y título, y ordena por fecha: usa el índice views_por_usuario { user_id: 1, started_at: -1 }.",
         docs: () => [lastView] }).attr}>
         <h3>Tu actividad</h3>
         <div style="font-weight:600">${esc(viewLabel(lastView, m))}</div>
         <div class="progress"><span style="width:${viewProgress(lastView, m)}%"></span></div>
-        <div class="card-meta" style="margin-top:8px">${lastView.completed ? "Terminado" : `Viste ${lastView.minutes} min`} · ${fmtDate(lastView.ts)}</div>
+        <div class="card-meta" style="margin-top:8px">${lastView.completed ? "Terminado" : `Viste ${lastView.minutes} min`} · ${fmtDate(lastView.started_at)}</div>
       </div>` : ""}
     </aside>
   </div>
@@ -500,7 +500,7 @@ function renderGenre(app) {
 function renderProfile(app) {
   const list = ME.watchlist.map((id) => MEDIA[id]);
   const myReviews = DB.reviews.filter((r) => r.user_id === ME._id).sort((a, b) => b.created_at.localeCompare(a.created_at));
-  const myViews = DB.views.filter((v) => v.user_id === ME._id).sort((a, b) => b.ts.localeCompare(a.ts));
+  const myViews = DB.views.filter((v) => v.user_id === ME._id).sort((a, b) => b.started_at.localeCompare(a.started_at));
   const hours = myViews.reduce((s, v) => s + v.minutes, 0) / 60;
   const safeUser = Object.fromEntries(Object.entries(ME).filter(([k]) => k !== "password_hash"));
   const TABS = { lista: "Mi lista", historial: "Historial", resenas: "Mis reseñas", cuenta: "Cuenta" };
@@ -525,7 +525,7 @@ function renderProfile(app) {
       <div class="stats" style="margin:0" ${ann({ col: "views", title: "Horas vistas en el último mes", short: "aggregate: $match → $group $sum minutes",
         q: `db.views.aggregate([
   { $match: { user_id: ${oid(ME._id)},
-              ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
+              started_at: { $gte: ISODate("${isoDaysAgo(30)}") } } },
   { $group: { _id: null,
               minutos: { $sum: "$minutes" },
               sesiones: { $sum: 1 } } },
@@ -563,15 +563,15 @@ function renderProfile(app) {
 
     historial: () => {
       const days = {};
-      myViews.forEach((v) => (days[v.ts.slice(0, 10)] ??= []).push(v));
-      return `<div ${ann({ col: ["views", "media"], title: "Historial de reproducción", short: "aggregate: $match ts → $sort → $lookup",
+      myViews.forEach((v) => (days[v.started_at.slice(0, 10)] ??= []).push(v));
+      return `<div ${ann({ col: ["views", "media"], title: "Historial de reproducción", short: "aggregate: $match started_at → $sort → $lookup",
         q: `db.views.aggregate([
   { $match: { user_id: ${oid(ME._id)},
-              ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
-  { $sort: { ts: -1 } },
+              started_at: { $gte: ISODate("${isoDaysAgo(30)}") } } },
+  { $sort: { started_at: -1 } },
   { $lookup: { from: "media", localField: "media_id",
                foreignField: "_id", as: "media" } },
-  { $project: { ts: 1, episode: 1, minutes: 1, completed: 1,
+  { $project: { started_at: 1, episode: 1, minutes: 1, completed: 1,
                 "media.title": 1, "media.poster": 1 } }
 ])`,
         why: "Lo \"visto\" no se guarda como una lista en users (crecería sin límite): se obtiene de views. Así el historial tiene fecha, duración y episodio de cada sesión.",
@@ -581,7 +581,7 @@ function renderProfile(app) {
             ${vs.map((v) => { const m = MEDIA[v.media_id]; return `
               <a class="history-item" href="detalle.html?id=${m._id}">${poster(m, "sm")}
                 <div><div class="t">${esc(m.title)}</div><div class="s">${esc(viewLabel(v, m))}</div></div>
-                <div class="time">${v.ts.slice(11, 16)} · ${v.minutes} min<br><span class="pill ${v.completed ? "ok" : "mid"}">${v.completed ? "Terminado" : `${viewProgress(v, m)}%`}</span></div>
+                <div class="time">${v.started_at.slice(11, 16)} · ${v.minutes} min<br><span class="pill ${v.completed ? "ok" : "mid"}">${v.completed ? "Terminado" : `${viewProgress(v, m)}%`}</span></div>
               </a>`; }).join("")}
           </div>`).join("")}</div></div>`;
     },

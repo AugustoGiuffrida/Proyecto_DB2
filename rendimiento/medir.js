@@ -116,10 +116,10 @@ const CASOS = [
       { $lookup: { from: "media", localField: "media_id", foreignField: "_id", as: "media" } },
     ] },
   { id: "5.3", nombre: "Historial de un usuario", coleccion: "views", indice: "views_por_usuario",
-    consulta: () => db.views.find({ user_id: YO, ts: { $gte: haceDias(30) } }).sort({ ts: -1 }) },
+    consulta: () => db.views.find({ user_id: YO, started_at: { $gte: haceDias(30) } }).sort({ started_at: -1 }) },
   { id: "1.4", nombre: "Top 10 de la semana", coleccion: "views", indice: "views_por_fecha",
     pipeline: [
-      { $match: { ts: { $gte: haceDias(7) } } },
+      { $match: { started_at: { $gte: haceDias(7) } } },
       { $group: { _id: "$media_id", reproducciones: { $sum: 1 } } },
       { $sort: { reproducciones: -1 } },
       { $limit: 10 },

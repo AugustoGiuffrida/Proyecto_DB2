@@ -77,7 +77,7 @@ mostrar("7.6 Usuarios por plan", () =>
 // -----------------------------------------------------------------------------
 mostrar("7.7 Usuarios que más miraron en los últimos 30 días", () =>
   db.views.aggregate([
-    { $match: { ts: { $gte: haceDias(30) } } },
+    { $match: { started_at: { $gte: haceDias(30) } } },
     { $group: { _id: "$user_id", minutos: { $sum: "$minutes" } } },
     { $sort: { minutos: -1 } },
     { $limit: 5 },

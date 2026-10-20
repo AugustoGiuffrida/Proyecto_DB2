@@ -44,8 +44,8 @@ mostrar("2.3 ¿El Eternauta está en la lista de CineFan88?", () =>
 mostrar("2.4 Última reproducción de CineFan88", () =>
   db.views.find(
     { user_id: IDS.cinefan, media_id: IDS.eternauta },
-    { _id: 0, ts: 1, episode: 1, minutes: 1, completed: 1 }
-  ).sort({ ts: -1 }).limit(1)
+    { _id: 0, started_at: 1, episode: 1, minutes: 1, completed: 1 }
+  ).sort({ started_at: -1 }).limit(1)
 );
 
 // -----------------------------------------------------------------------------
