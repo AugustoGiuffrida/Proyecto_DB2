@@ -60,9 +60,11 @@ db.reviews.createIndex({ user_id: 1, created_at: -1 }, { name: "reviews_por_usua
 db.reviews.createIndex({ media_id: 1, user_id: 1 }, { name: "reviews_titulo_usuario_unico", unique: true });
 
 // ----------------------------------------------------------------------- views
-// No se crea ninguno: MongoDB crea automáticamente "meta_1_ts_1" al crear la
-// serie temporal, y las consultas por usuario lo aprovechan filtrando con
-// { meta: { user_id: X } } (ver rendimiento.md).
+// Historial, "Seguir viendo" y horas vistas de un usuario
+db.views.createIndex({ user_id: 1, ts: -1 }, { name: "views_por_usuario" });
+
+// "Top 10 de la semana": reproducciones de un rango de fechas
+db.views.createIndex({ ts: -1 }, { name: "views_por_fecha" });
 
 // -----------------------------------------------------------------------------
 print("\n  Índices por colección (getIndexes):");

@@ -88,13 +88,13 @@ db.genres.find({}, { name: 1, color: 1 }).sort({ name: 1 })
 ### 1.3 Seguir viendo
 
 Se resuelve entre la base y la aplicación:
-1. La base devuelve las sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja. Se filtra comparando el subdocumento `meta` completo, `{ meta: { user_id: … } }`: así MongoDB usa el índice que crea automáticamente en la serie temporal (`meta_1_ts_1`). Ver [`rendimiento.md`](rendimiento.md).
+1. La base devuelve las sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja (índice `views_por_usuario`).
 2. La aplicación recorre la lista y se queda con la **primera** sesión de cada título, que es la más reciente. Si no está terminada, va a "Seguir viendo".
 3. Con `$in` se traen los nombres de esos títulos en una sola consulta.
 
 ```js
 const sesiones = db.views.find(
-  { meta: { user_id: ObjectId("665f0c000000000000000001") },
+  { user_id: ObjectId("665f0c000000000000000001"),
     ts: { $gte: ISODate("2026-09-06T12:00:00Z") } },
   { media_id: 1, ts: 1, episode: 1, minutes: 1, completed: 1 }
 ).sort({ ts: -1 }).toArray()
@@ -120,7 +120,7 @@ db.media.find({ _id: { $in: seguirViendo.map((s) => s.media_id) } }, { title: 1 
 ### 1.4 Top 10 de la semana
 
 Cada etapa del `aggregate` hace una cosa:
-- `$match` toma las reproducciones de los últimos 7 días.
+- `$match` toma las reproducciones de los últimos 7 días (índice `views_por_fecha`).
 - `$group` arma una fila por título y cuenta las reproducciones con `$sum`.
 - `$sort` y `$limit` dejan los 10 primeros.
 - `$lookup` trae el título desde `media`.
@@ -253,11 +253,11 @@ db.users.countDocuments({ _id: ObjectId("665f0c000000000000000001"),
 
 ### 2.4 Última reproducción del usuario
 
-Filtra por el usuario (el `metaField` de la serie temporal) y ordena por fecha (el `timeField`).
+Filtra por usuario y título, y ordena por fecha. Usa el índice `views_por_usuario` (`{ user_id: 1, ts: -1 }`).
 
 ```js
 db.views.find(
-  { meta: { user_id: ObjectId("665f0c000000000000000001") }, media_id: ObjectId("665f0a000000000000000010") },
+  { user_id: ObjectId("665f0c000000000000000001"), media_id: ObjectId("665f0a000000000000000010") },
   { _id: 0, ts: 1, episode: 1, minutes: 1, completed: 1 }
 ).sort({ ts: -1 }).limit(1)
 ```
@@ -467,11 +467,11 @@ db.users.aggregate([
 
 ### 5.3 Historial de reproducción
 
-Lo "visto" no se guarda como una lista en `users`: sale de la serie temporal `views`.
+Lo "visto" no se guarda como una lista en `users`: sale de la colección `views`.
 
 ```js
 db.views.aggregate([
-  { $match: { meta: { user_id: ObjectId("665f0c000000000000000001") },
+  { $match: { user_id: ObjectId("665f0c000000000000000001"),
               ts: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
   { $sort: { ts: -1 } },
   { $lookup: { from: "media", localField: "media_id", foreignField: "_id", as: "media" } },
@@ -490,7 +490,7 @@ db.views.aggregate([
 
 ```js
 db.views.aggregate([
-  { $match: { meta: { user_id: ObjectId("665f0c000000000000000001") },
+  { $match: { user_id: ObjectId("665f0c000000000000000001"),
               ts: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
   { $group: { _id: null, minutos: { $sum: "$minutes" }, sesiones: { $sum: 1 } } },
   { $project: { _id: 0, sesiones: 1, horas: { $divide: ["$minutos", 60] } } }
@@ -656,13 +656,13 @@ en El Eternauta: Ricardo A. Darín
 
 ### 6.8 Registrar una reproducción
 
-Inserción en la serie temporal. MongoDB la ubica en el bucket del usuario.
+Cada reproducción es un documento nuevo en `views`.
 
 ```js
 db.views.insertOne({
-  ts: new Date(),
-  meta: { user_id: ObjectId("665f0c000000000000000001") },
+  user_id: ObjectId("665f0c000000000000000001"),
   media_id: ObjectId("665f0a000000000000000010"),
+  ts: new Date(),
   episode: { season: 1, number: 5 },
   minutes: 58,
   completed: true
@@ -762,12 +762,12 @@ db.users.aggregate([
 
 ### 7.7 Los usuarios que más miraron en el último mes
 
-`$group` sobre la serie temporal suma los minutos de cada usuario, y `$lookup` trae el username y el plan.
+`$group` sobre `views` suma los minutos de cada usuario, y `$lookup` trae el username y el plan.
 
 ```js
 db.views.aggregate([
   { $match: { ts: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
-  { $group: { _id: "$meta.user_id", minutos: { $sum: "$minutes" } } },
+  { $group: { _id: "$user_id", minutos: { $sum: "$minutes" } } },
   { $sort: { minutos: -1 } },
   { $limit: 5 },
   { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "usuario" } },

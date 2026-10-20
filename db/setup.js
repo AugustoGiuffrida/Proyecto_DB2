@@ -1,7 +1,7 @@
 // =============================================================================
 // Crea la base "fotograma" completa, desde cero:
 //
-//   00_crear_db.js       colecciones + validación ($jsonSchema) + serie temporal
+//   00_crear_db.js       colecciones + validación ($jsonSchema)
 //   01_datos_semilla.js  datos del prototipo (interfaces/assets/data.js)
 //   02_datos_masivos.js  datos generados (cantidades en config.js)
 //   03_ratings.js        media.rating calculado desde reviews

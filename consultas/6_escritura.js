@@ -154,14 +154,14 @@ renombrarPersona(IDS.darin, "Ricardo Darín");
 print(`    deshecho → ${db.media.findOne({ _id: IDS.eternauta }).cast[0].name}`);
 
 // -----------------------------------------------------------------------------
-// 6.8 Registrar una reproducción (insert en la serie temporal)
+// 6.8 Registrar una reproducción
 // -----------------------------------------------------------------------------
 print("\n▸ 6.8 Registrar una reproducción de El Eternauta, episodio 5");
-const sesion = { ts: new Date(), meta: { user_id: IDS.cinefan }, media_id: IDS.eternauta,
+const sesion = { user_id: IDS.cinefan, media_id: IDS.eternauta, ts: new Date(),
                  episode: { season: 1, number: 5 }, minutes: 58, completed: true };
 db.views.insertOne(sesion);
-const ultima = db.views.find({ meta: { user_id: IDS.cinefan } }).sort({ ts: -1 }).limit(1).toArray()[0];
+const ultima = db.views.find({ user_id: IDS.cinefan }).sort({ ts: -1 }).limit(1).toArray()[0];
 print(`    última sesión del usuario: ${linea({ ts: ultima.ts, episode: ultima.episode, minutes: ultima.minutes })}`);
-r = db.views.deleteOne({ meta: { user_id: IDS.cinefan }, ts: sesion.ts });
+r = db.views.deleteOne({ user_id: IDS.cinefan, ts: sesion.ts });
 print(`    deshecho → ${r.deletedCount} documento borrado`);
 }

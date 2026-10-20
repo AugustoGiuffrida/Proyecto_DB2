@@ -65,11 +65,11 @@ mongosh db/setup.js
 
 ### Qué hace `setup.js`
 
-Crea la base **`fotograma`** desde cero (borra la anterior si existe). En una PC común tarda alrededor de un minuto y medio; con Docker en una Mac Intel, unos cinco minutos.
+Crea la base **`fotograma`** desde cero (borra la anterior si existe). En una PC común tarda menos de un minuto; con Docker en una Mac Intel puede tardar unos minutos más.
 
 | Script | Qué hace |
 |---|---|
-| [`db/00_crear_db.js`](db/00_crear_db.js) | Crea las 6 colecciones. Cinco tienen validación `$jsonSchema` y `views` es una serie temporal |
+| [`db/00_crear_db.js`](db/00_crear_db.js) | Crea las 6 colecciones, todas con validación `$jsonSchema` |
 | [`db/01_datos_semilla.js`](db/01_datos_semilla.js) | Carga los documentos del prototipo (16 títulos reales, sus personas, CineFan88…) |
 | [`db/02_datos_masivos.js`](db/02_datos_masivos.js) | Genera datos coherentes: 4.000 personas, 3.000 títulos, 10.000 usuarios, 150.000 reseñas y 1.000.000 de reproducciones |
 | [`db/03_ratings.js`](db/03_ratings.js) | Calcula `media.rating` desde las reseñas (`$group` + `updateOne`) |

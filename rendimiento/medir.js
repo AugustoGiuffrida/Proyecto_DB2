@@ -32,10 +32,6 @@ const ORIGINALES = {};
 for (const c of ["media", "users", "reviews", "views"]) {
   ORIGINALES[c] = db.getCollection(c).getIndexes().filter((i) => i.name !== "_id_");
 }
-// Índices que no están en el modelo y se prueban para ver si convendría agregarlos
-const PRUEBA = {
-  views_ts: { key: { ts: -1 }, name: "views_ts" },
-};
 const crearDesdeCopia = function (coleccion, i) {
   const opciones = { name: i.name };
   if (i.unique) opciones.unique = true;
@@ -47,7 +43,7 @@ const quitarIndices = function (coleccion) {
   }
 };
 const crearIndice = function (coleccion, nombre) {
-  crearDesdeCopia(coleccion, ORIGINALES[coleccion].find((i) => i.name === nombre) ?? PRUEBA[nombre]);
+  crearDesdeCopia(coleccion, ORIGINALES[coleccion].find((i) => i.name === nombre));
 };
 const restaurarIndices = function () {
   for (const [coleccion, indices] of Object.entries(ORIGINALES)) {
@@ -71,7 +67,7 @@ const etapas = function (plan) {
   return lista.reverse().join(" → ");
 };
 const metricas = function (ex) {
-  const cursor = ex.stages?.[0]?.$cursor;               // formato de las series temporales
+  const cursor = ex.stages?.[0]?.$cursor;               // formato de algunos aggregate
   const stats = ex.executionStats ?? cursor.executionStats;
   const planner = ex.queryPlanner ?? cursor.queryPlanner;
   return {
@@ -119,9 +115,9 @@ const CASOS = [
       { $sort: { created_at: -1 } },
       { $lookup: { from: "media", localField: "media_id", foreignField: "_id", as: "media" } },
     ] },
-  { id: "5.3", nombre: "Historial de un usuario", coleccion: "views", indice: "meta_1_ts_1",
-    consulta: () => db.views.find({ meta: { user_id: YO }, ts: { $gte: haceDias(30) } }).sort({ ts: -1 }) },
-  { id: "1.4", nombre: "Top 10 de la semana (índice nuevo en ts)", coleccion: "views", indice: "views_ts",
+  { id: "5.3", nombre: "Historial de un usuario", coleccion: "views", indice: "views_por_usuario",
+    consulta: () => db.views.find({ user_id: YO, ts: { $gte: haceDias(30) } }).sort({ ts: -1 }) },
+  { id: "1.4", nombre: "Top 10 de la semana", coleccion: "views", indice: "views_por_fecha",
     pipeline: [
       { $match: { ts: { $gte: haceDias(7) } } },
       { $group: { _id: "$media_id", reproducciones: { $sum: 1 } } },
@@ -176,7 +172,6 @@ const indicesUsados = function (plan) {
 };
 print("\n=== Con todos los índices creados, ¿qué índice elige MongoDB?");
 for (const c of CASOS) {
-  if (PRUEBA[c.indice]) continue;   // los índices de prueba no quedan en la base
   const ex = c.explicar();
   const usados = indicesUsados((ex.queryPlanner ?? ex.stages[0].$cursor.queryPlanner).winningPlan);
   const ok = usados.includes(c.indice);

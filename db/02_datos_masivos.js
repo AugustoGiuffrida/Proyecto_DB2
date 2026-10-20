@@ -6,7 +6,7 @@
 //   people  ->  media (referencia a people y genres)
 //   users   (watchlist referencia a media)
 //   reviews (referencia a media y users, una por par usuario-título)
-//   views   (serie temporal de reproducciones de los últimos N días)
+//   views   (reproducciones de los últimos N días)
 //
 // Las cantidades se configuran en db/config.js. El generador usa una semilla
 // fija: dos corridas producen los mismos datos (solo cambian los _id).
@@ -332,10 +332,8 @@ const r4 = insertarEnLotes(db.reviews, N.reviews, () => {
 paso(`reviews: ${fmt(r4.insertados)} en ${t()}`);
 
 // =============================================================================
-// 5. views — serie temporal
-// Se generan día por día y se insertan en orden cronológico, como llegarían
-// en la realidad. Insertar en orden permite que MongoDB vaya completando
-// los buckets abiertos en lugar de crear buckets nuevos para datos "viejos".
+// 5. views — reproducciones
+// Se generan día por día, en orden cronológico, como llegarían en la realidad.
 // =============================================================================
 t = cronometro();
 const hoyMs = HOY.getTime();
@@ -353,7 +351,7 @@ const generarVista = (inicioDia) => {
     // no puede ser futura ni anterior al alta del título o del usuario
     if (ts.getTime() > hoyMs || ts < m.created_at || ts < u.created_at) continue;
 
-    const doc = { ts, meta: { user_id: u._id }, media_id: m._id };
+    const doc = { user_id: u._id, media_id: m._id, ts };
     let duracion = m.runtime;
     if (m.type === "series") {
       // los primeros episodios se ven más que los últimos

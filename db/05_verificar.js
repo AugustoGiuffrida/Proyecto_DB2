@@ -92,7 +92,7 @@ revisar("media.cast / directors → people", faltantes(personas, "people"));
 revisar("users.watchlist → media", faltantes(enListas, "media"));
 
 // views es grande: $group obtiene los ids distintos y se revisan esos
-for (const [campo, destino] of [["media_id", "media"], ["meta.user_id", "users"]]) {
+for (const [campo, destino] of [["media_id", "media"], ["user_id", "users"]]) {
   const ids = new Map();
   db.views.aggregate([{ $group: { _id: "$" + campo } }]).forEach((d) => ids.set(d._id.toString(), d._id));
   revisar(`views.${campo} → ${destino}`, faltantes(ids, destino));

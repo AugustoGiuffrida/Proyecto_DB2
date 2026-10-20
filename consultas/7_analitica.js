@@ -73,12 +73,12 @@ mostrar("7.6 Usuarios por plan", () =>
 
 // -----------------------------------------------------------------------------
 // 7.7 Minutos vistos por usuario en el último mes (los 5 que más miran)
-// $group sobre la serie temporal y $lookup para traer el username.
+// $group sobre views suma los minutos de cada usuario y $lookup trae el username.
 // -----------------------------------------------------------------------------
 mostrar("7.7 Usuarios que más miraron en los últimos 30 días", () =>
   db.views.aggregate([
     { $match: { ts: { $gte: haceDias(30) } } },
-    { $group: { _id: "$meta.user_id", minutos: { $sum: "$minutes" } } },
+    { $group: { _id: "$user_id", minutos: { $sum: "$minutes" } } },
     { $sort: { minutos: -1 } },
     { $limit: 5 },
     { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "usuario" } },

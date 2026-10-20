@@ -5,7 +5,6 @@
 // explícita. Crearlas explícitamente (en vez de dejar que se creen al primer
 // insert) permite:
 //   - definir reglas de validación ($jsonSchema) para cada colección
-//   - crear "views" como colección de series temporales
 //
 // Uso:  mongosh db/00_crear_db.js
 // =============================================================================
@@ -194,25 +193,26 @@ db.createCollection("reviews", validacion({
 paso("reviews");
 
 // -----------------------------------------------------------------------------
-// views — colección de SERIES TEMPORALES
-// MongoDB agrupa internamente los documentos en "buckets" por meta + tiempo y
-// los comprime.
-//
-// Decisiones (medidas con 1.000.000 de documentos):
-//  - metaField = { user_id }: cada usuario es "una serie", como un sensor.
-//    Con meta = { user_id, media_id } había ~726.000 series distintas y se
-//    generaban 981.837 buckets: prácticamente uno por documento, sin beneficio.
-//  - granularity "hours": un usuario reproduce algo cada varias horas, no cada
-//    minuto. Con "hours" cada bucket abarca hasta 30 días en lugar de 1.
-//  - media_id es un campo de medición más (no forma parte de meta).
-//
-// Nota: las colecciones de series temporales no admiten validador $jsonSchema,
-// por eso views no tiene reglas de validación.
+// views — reproducciones: cada documento es una sesión (quién, qué, cuándo,
+// cuántos minutos). Es la colección más grande: crece con cada reproducción.
 // -----------------------------------------------------------------------------
-db.createCollection("views", {
-  timeseries: { timeField: "ts", metaField: "meta", granularity: "hours" },
-});
-paso("views (serie temporal: timeField = ts, metaField = meta, granularity = hours)");
+db.createCollection("views", validacion({
+  bsonType: "object",
+  required: ["user_id", "media_id", "ts", "minutes", "completed"],
+  properties: {
+    user_id: { bsonType: "objectId" },
+    media_id: { bsonType: "objectId" },
+    ts: { bsonType: "date" },
+    episode: {                                   // solo si es una serie
+      bsonType: "object",
+      required: ["season", "number"],
+      properties: { season: numero(1, 100), number: numero(1, 1000) },
+    },
+    minutes: numero(0, 1000),
+    completed: { bsonType: "bool" },
+  },
+}));
+paso("views");
 
 print(`\n  Colecciones creadas: ${db.getCollectionNames().filter((c) => !c.startsWith("system.")).sort().join(", ")}`);
 }

@@ -31,11 +31,11 @@ mostrar("5.2 Mi lista", () =>
 
 // -----------------------------------------------------------------------------
 // 5.3 Historial de reproducción de los últimos 30 días
-// Lo "visto" no es una lista en users: sale de la serie temporal views.
+// Lo "visto" no es una lista en users: sale de la colección views.
 // -----------------------------------------------------------------------------
 mostrar("5.3 Historial (últimos 30 días)", () =>
   db.views.aggregate([
-    { $match: { meta: { user_id: IDS.cinefan }, ts: { $gte: haceDias(30) } } },
+    { $match: { user_id: IDS.cinefan, ts: { $gte: haceDias(30) } } },
     { $sort: { ts: -1 } },
     { $lookup: { from: "media", localField: "media_id", foreignField: "_id", as: "media" } },
     { $project: { _id: 0, ts: 1, "media.title": 1, episode: 1, minutes: 1, completed: 1 } },
@@ -48,7 +48,7 @@ mostrar("5.3 Historial (últimos 30 días)", () =>
 // -----------------------------------------------------------------------------
 mostrar("5.4 Horas vistas en los últimos 30 días", () =>
   db.views.aggregate([
-    { $match: { meta: { user_id: IDS.cinefan }, ts: { $gte: haceDias(30) } } },
+    { $match: { user_id: IDS.cinefan, ts: { $gte: haceDias(30) } } },
     { $group: { _id: null, minutos: { $sum: "$minutes" }, sesiones: { $sum: 1 } } },
     { $project: { _id: 0, sesiones: 1, horas: { $divide: ["$minutos", 60] } } },
   ])

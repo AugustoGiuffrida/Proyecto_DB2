@@ -60,14 +60,12 @@ Base **`fotograma`**, con 6 colecciones:
 - **`people`:** actores y directores. Relación N:M con `media` mediante índices multikey.
 - **`users`:** `subscription` y `payment_methods` embebidos; `watchlist` con referencias a `media`. Lo "visto" se obtiene de `views`.
 - **`reviews`:** colección propia (1:N sin límite) con una copia de `username` y `avatar`. Hay un índice único en `{ media_id, user_id }`.
-- **`views`:** serie temporal con `timeField: ts`, `metaField: meta = { user_id }` y `granularity: "hours"`. `media_id` es un campo de medición.
-  - Con `meta = { user_id, media_id }` se generaba casi un bucket por documento. La medición está en `colecciones.md`.
-  - Las consultas por usuario filtran con `{ meta: { user_id: X } }` (subdocumento completo) para usar el índice automático `meta_1_ts_1`; no hay otro índice en `views`.
+- **`views`:** colección común (no serie temporal; se simplificó por tiempo): `{ user_id, media_id, ts, episode?, minutes, completed }`. Índices `views_por_usuario { user_id: 1, ts: -1 }` y `views_por_fecha { ts: -1 }`.
 
 ## Base de datos local
 
 - **Entorno:** MongoDB 8.0 corre en Docker (`docker-compose.yml`, contenedor `fotograma-mongo`) en `localhost:27017`, sin autenticación. La imagen trae mongosh y las database tools. El repo está montado en `/proyecto` (directorio de trabajo del contenedor).
-- **Armado:** `docker compose exec mongo mongosh db/setup.js` recrea la base desde cero (~5 minutos en esta Mac Intel con Docker; ~1,5 en una PC común sin Docker).
+- **Armado:** `docker compose exec mongo mongosh db/setup.js` recrea la base desde cero (menos de un minuto en la PC Linux; algo más en la Mac Intel con Docker).
 - **Comandos de mongosh/mongodump:** en la Mac correrlos con `docker compose exec mongo ...`, porque ahí no están instalados.
 - **PC Linux (andromeda):** también usa el contenedor de Docker (el servicio `mongod` nativo está deshabilitado). mongosh y las database tools sí están instalados en el host, así que se puede correr `mongosh` directo contra `localhost:27017`. En algunas redes el puerto 22 está bloqueado y `git pull/push` se cuelga: usar SSH por el puerto 443 (`ssh.github.com`).
 - **Volúmenes:** se definen en `db/config.js`. Valores actuales: 4.000 personas, 3.000 títulos, 10.000 usuarios, 150.000 reseñas y 1.000.000 de reproducciones.
@@ -78,7 +76,6 @@ Base **`fotograma`**, con 6 colecciones:
 
 - **Funciones en bloques:** `setup.js` carga todos los scripts con `load()` en el mismo contexto, así que cada script envuelve su código en un bloque `{ ... }`. Dentro de esos bloques **no usar declaraciones `function f()`**, porque mongosh las saca del bloque y pierden el acceso a las constantes. Usar `const f = function () {}`.
 - **Números:** los números enteros de JS se guardan como `int` (`8.0` también). En los validadores usar `bsonType: "number"`.
-- **Series temporales:** no admiten validador `$jsonSchema`.
 
 ## Próximos pasos
 

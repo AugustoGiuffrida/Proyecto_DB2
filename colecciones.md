@@ -11,7 +11,7 @@ El modelo se diseñó **a partir de las pantallas** (ver [`interfaces/`](interfa
 | `people` | Actores y directores | miles | poco |
 | `users` | Cuentas de usuario | miles | moderado |
 | `reviews` | Reseñas de usuarios a títulos | cientos de miles | mucho |
-| `views` | Sesiones de reproducción (**serie temporal**) | millones | muchísimo |
+| `views` | Sesiones de reproducción | millones | muchísimo |
 
 ```mermaid
 flowchart LR
@@ -20,7 +20,7 @@ flowchart LR
     media["media<br/>(movie | series)"]
     users["users"]
     reviews["reviews"]
-    views["views<br/>(time series)"]
+    views["views"]
 
     media -- "genre_ids [ ]" --> genres
     media -- "directors [ ] / cast [ ]<br/>person_id + name" --> people
@@ -29,7 +29,7 @@ flowchart LR
     reviews -- "media_id" --> media
     reviews -- "user_id + user {username, avatar}" --> users
     views -- "media_id" --> media
-    views -- "meta.user_id" --> users
+    views -- "user_id" --> users
 ```
 
 ## Criterio general: ¿embeber o referenciar?
@@ -209,52 +209,35 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
 
 ---
 
-## 6. `views` — colección de series temporales
+## 6. `views`
 
 ```js
-db.createCollection("views", {
-  timeseries: { timeField: "ts", metaField: "meta", granularity: "hours" }
-})
-```
-```js
 {
-  ts: ISODate("2026-10-03T23:10:00Z"),
-  meta: { user_id: ObjectId("665f0c…01") },    // la "serie": cada usuario
-  media_id: ObjectId("665f0a…10"),
-  episode: { season: 1, number: 4 },          // solo si es una serie
+  _id: ObjectId("…"),
+  user_id: ObjectId("665f0c…01"),           // → users
+  media_id: ObjectId("665f0a…10"),          // → media
+  ts: ISODate("2026-10-03T23:10:00Z"),      // cuándo empezó la sesión
+  episode: { season: 1, number: 4 },        // solo si es una serie
   minutes: 32,
   completed: false
 }
 ```
 
 **Decisiones**
-- Cada documento es **una sesión de reproducción**. Se insertan muchísimos, ordenados por tiempo, se consultan por rangos de fechas y no se modifican. Es exactamente el caso de uso de las series temporales que vimos en clase.
-- MongoDB agrupa internamente los documentos en *buckets* (uno por valor de `meta` y por período de tiempo) y los comprime. Ocupa menos disco y las consultas por rango son más rápidas.
-- **`meta` = el usuario.** Cada usuario es "una serie", como un sensor en IoT. El `meta` tiene que identificar la fuente de los datos y tener **pocos valores distintos**.
-- **`granularity: "hours"`.** Un usuario reproduce algo cada varias horas, no cada minuto. Con `"hours"` cada bucket puede abarcar hasta 30 días; con `"minutes"`, solo uno.
+- Cada documento es **una sesión de reproducción**: quién miró qué, cuándo y cuántos minutos.
+- **Colección propia** porque es la que más crece (millones de documentos): cada vez que alguien reproduce algo se inserta un documento nuevo. Guardar esto dentro de `users` o de `media` haría crecer esos documentos sin límite.
+- Referencia a `users` y a `media` con `user_id` y `media_id`, como en `reviews`.
 - Alimenta cuatro secciones:
   - "Top 10 de la semana": `$match` por `ts` y `$group` con `$sum`.
   - "Seguir viendo": las sesiones del usuario ordenadas por fecha; la aplicación se queda con la más reciente de cada título.
   - Historial del perfil.
   - Horas vistas en el mes: `$sum` de `minutes`.
 
-**Lo medimos** (1.000.000 de reproducciones, ver `db/00_crear_db.js`)
-
-La primera versión usaba `meta: { user_id, media_id }` con `granularity: "minutes"`:
-
-| | `meta` = usuario + título, `minutes` | `meta` = usuario, `hours` |
-|---|---|---|
-| valores distintos de `meta` | 726.222 | 10.004 |
-| buckets | 981.837 (≈ 1 documento por bucket) | 29.625 (≈ 34 documentos por bucket) |
-| tamaño de los datos | 349 MB | 34 MB |
-| espacio en disco* | ≈ 63 MB | ≈ 9–18 MB |
-| tamaño de los índices* | ≈ 81 MB | ≈ 2–3 MB |
-
-Con casi un bucket por documento la serie temporal no tenía ningún beneficio: ocupaba más que una colección común.
-
-\* El espacio en disco varía entre corridas según cuándo WiredTiger compacta los archivos; la cantidad de buckets y el tamaño de los datos son estables.
-
-**Índices:** solo el que MongoDB crea automáticamente sobre `meta` + `ts` (`meta_1_ts_1`). Para que lo use, las consultas por usuario comparan el subdocumento completo: `{ meta: { user_id: X } }`. Con `{ "meta.user_id": X }` no lo usaría (medido en [`rendimiento.md`](rendimiento.md)).
+**Índices previstos**
+| Índice | Para |
+|---|---|
+| `{ user_id: 1, ts: -1 }` | historial, "Seguir viendo", horas vistas y última reproducción de un usuario |
+| `{ ts: -1 }` | "Top 10 de la semana" (reproducciones de un rango de fechas) |
 
 ---
 
@@ -269,7 +252,7 @@ Con casi un bucket por documento la serie temporal no tenía ningún beneficio: 
 | título ↔ persona | muchos a muchos | arrays con referencia extendida en `media.directors` y `media.cast` + índices multikey |
 | usuario ↔ título (mi lista) | muchos a muchos | array de referencias en `users.watchlist` |
 | título → reseñas / usuario → reseñas | uno a muchos (sin límite) | colección `reviews` con `media_id` y `user_id` |
-| usuario ↔ título (reproducciones) | muchos a muchos con historial | colección de series temporales `views` |
+| usuario ↔ título (reproducciones) | muchos a muchos con historial | colección `views` con `user_id` y `media_id` |
 
 ## Patrones de diseño usados
 
@@ -278,7 +261,6 @@ Con casi un bucket por documento la serie temporal no tenía ningún beneficio: 
 | **Polimórfico** | `media` (`type`: movie / series) | películas y series se listan juntas |
 | **Referencia extendida** | `media.cast`, `media.directors`, `reviews.user` | evitar `$lookup` en las pantallas más usadas |
 | **Computado** | `media.rating` | se lee mucho y cambia poco |
-| **Series temporales** | `views` | eventos con fecha, masivos e inmutables |
 
 ## Pantalla → consultas
 

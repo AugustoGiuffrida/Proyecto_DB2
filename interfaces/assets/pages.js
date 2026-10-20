@@ -12,7 +12,7 @@ const CARD_PROJ = `{ title: 1, type: 1, poster: 1, release_year: 1, "rating.avg"
 function continueWatching(userId) {
   const last = {};
   DB.views
-    .filter((v) => v.meta.user_id === userId)
+    .filter((v) => v.user_id === userId)
     .sort((a, b) => b.ts.localeCompare(a.ts))
     .forEach((v) => { last[v.media_id] ??= v; });
   return Object.values(last).filter((v) => !v.completed);
@@ -78,9 +78,9 @@ db.genres.find().sort({ name: 1 })`,
   </section>
 
   ${cont.length ? `
-  <section class="section" ${ann({ col: ["views", "media"], title: "Seguir viendo", short: "find({ meta: { user_id }, ts: { $gte } }).sort({ ts: -1 })",
+  <section class="section" ${ann({ col: ["views", "media"], title: "Seguir viendo", short: "find({ user_id, ts: { $gte } }).sort({ ts: -1 })",
     q: `// 1) sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja
-db.views.find({ meta: { user_id: ${oid(ME._id)} },
+db.views.find({ user_id: ${oid(ME._id)},
                 ts: { $gte: ISODate("${isoDaysAgo(30)}") } })
   .sort({ ts: -1 })
 
@@ -90,7 +90,7 @@ db.views.find({ meta: { user_id: ${oid(ME._id)} },
 // 3) nombres y pósters de esos títulos
 db.media.find({ _id: { $in: [ /* ids de los títulos */ ] } },
               { title: 1, poster: 1 })`,
-    why: "views es una colección de series temporales: cada documento es una sesión de reproducción. La base devuelve las sesiones ordenadas por fecha y la aplicación elige la más reciente de cada título.",
+    why: "Cada documento de views es una sesión de reproducción. La base devuelve las sesiones del usuario ordenadas por fecha (índice views_por_usuario) y la aplicación elige la más reciente de cada título.",
     docs: () => cont, docsLabel: "Documentos de views (última sesión de cada título)" }).attr}>
     <div class="section-head"><h2 class="section-title">Seguir viendo</h2><span class="section-sub">Continuá donde lo dejaste</span></div>
     <div class="row wide">
@@ -113,7 +113,7 @@ db.media.find({ _id: { $in: [ /* ids de los títulos */ ] } },
                foreignField: "_id", as: "media" } },
   { $project: { views: 1, "media.title": 1, "media.poster": 1 } }
 ])`,
-    why: "El ranking ya no es un número inventado guardado en media: se calcula sumando las reproducciones de los últimos 7 días. Las colecciones de series temporales están optimizadas justamente para filtrar por rango de tiempo.",
+    why: "El ranking ya no es un número inventado guardado en media: se calcula sumando las reproducciones de los últimos 7 días. El índice views_por_fecha { ts: -1 } permite leer solo las reproducciones de ese rango.",
     docs: () => DB.trending_result, docsLabel: "Resultado del $group (antes del $lookup)", maxDocs: 4 }).attr}>
     <div class="section-head"><h2 class="section-title">Top 10 de la semana</h2><span class="section-sub">Según reproducciones de los últimos 7 días</span></div>
     <div class="row top">
@@ -181,7 +181,7 @@ function renderDetail(app) {
     .filter((x) => x._id !== m._id && x.genre_ids.some((g) => m.genre_ids.includes(g)))
     .sort((a, b) => b.rating.avg - a.rating.avg).slice(0, 10);
   const inList = ME.watchlist.includes(m._id);
-  const lastView = DB.views.find((v) => v.meta.user_id === ME._id && v.media_id === m._id);
+  const lastView = DB.views.find((v) => v.user_id === ME._id && v.media_id === m._id);
   const totalEps = m.type === "series" ? m.seasons.reduce((n, s) => n + s.episodes.length, 0) : 0;
 
   const aDoc = ann({ col: "media", title: "Documento del título", short: `findOne({ _id: ObjectId("…${m._id.slice(-4)}") })`,
@@ -309,12 +309,12 @@ db.media.updateOne({ _id: ${oid(m._id)} },
         </div>
       </div>
       ${lastView ? `
-      <div class="panel" ${ann({ col: "views", title: "Tu última reproducción", short: 'find({ meta: { user_id }, media_id }).sort({ ts: -1 })',
-        q: `db.views.find({ meta: { user_id: ${oid(ME._id)} },
+      <div class="panel" ${ann({ col: "views", title: "Tu última reproducción", short: 'find({ user_id, media_id }).sort({ ts: -1 })',
+        q: `db.views.find({ user_id: ${oid(ME._id)},
                 media_id: ${oid(m._id)} })
   .sort({ ts: -1 })
   .limit(1)`,
-        why: "Filtra por el metaField (el usuario) y ordena por el timeField: es el patrón de acceso típico de una serie temporal. Comparar el subdocumento meta completo permite usar el índice que MongoDB crea automáticamente (meta_1_ts_1).",
+        why: "Filtra por usuario y título, y ordena por fecha: usa el índice views_por_usuario { user_id: 1, ts: -1 }.",
         docs: () => [lastView] }).attr}>
         <h3>Tu actividad</h3>
         <div style="font-weight:600">${esc(viewLabel(lastView, m))}</div>
@@ -500,7 +500,7 @@ function renderGenre(app) {
 function renderProfile(app) {
   const list = ME.watchlist.map((id) => MEDIA[id]);
   const myReviews = DB.reviews.filter((r) => r.user_id === ME._id).sort((a, b) => b.created_at.localeCompare(a.created_at));
-  const myViews = DB.views.filter((v) => v.meta.user_id === ME._id).sort((a, b) => b.ts.localeCompare(a.ts));
+  const myViews = DB.views.filter((v) => v.user_id === ME._id).sort((a, b) => b.ts.localeCompare(a.ts));
   const hours = myViews.reduce((s, v) => s + v.minutes, 0) / 60;
   const safeUser = Object.fromEntries(Object.entries(ME).filter(([k]) => k !== "password_hash"));
   const TABS = { lista: "Mi lista", historial: "Historial", resenas: "Mis reseñas", cuenta: "Cuenta" };
@@ -524,7 +524,7 @@ function renderProfile(app) {
       </div>
       <div class="stats" style="margin:0" ${ann({ col: "views", title: "Horas vistas en el último mes", short: "aggregate: $match → $group $sum minutes",
         q: `db.views.aggregate([
-  { $match: { meta: { user_id: ${oid(ME._id)} },
+  { $match: { user_id: ${oid(ME._id)},
               ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
   { $group: { _id: null,
               minutos: { $sum: "$minutes" },
@@ -532,7 +532,7 @@ function renderProfile(app) {
   { $project: { _id: 0, sesiones: 1,
                 horas: { $divide: ["$minutos", 60] } } }
 ])`,
-        why: "Rango de tiempo sobre una colección de series temporales + $group. El resultado se muestra en el encabezado del perfil.",
+        why: "$match por usuario y rango de fechas, y $group para sumar los minutos. El resultado se muestra en el encabezado del perfil.",
         docs: () => [{ sesiones: myViews.length, horas: +hours.toFixed(1) }], docsLabel: "Resultado" }).attr}>
         <div class="stat"><b>${hours.toFixed(1)}</b><span>Horas este mes</span></div>
         <div class="stat"><b>${myReviews.length}</b><span>Reseñas</span></div>
@@ -566,7 +566,7 @@ function renderProfile(app) {
       myViews.forEach((v) => (days[v.ts.slice(0, 10)] ??= []).push(v));
       return `<div ${ann({ col: ["views", "media"], title: "Historial de reproducción", short: "aggregate: $match ts → $sort → $lookup",
         q: `db.views.aggregate([
-  { $match: { meta: { user_id: ${oid(ME._id)} },
+  { $match: { user_id: ${oid(ME._id)},
               ts: { $gte: ISODate("${isoDaysAgo(30)}") } } },
   { $sort: { ts: -1 } },
   { $lookup: { from: "media", localField: "media_id",

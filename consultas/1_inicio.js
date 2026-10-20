@@ -33,11 +33,9 @@ mostrar("1.2 Catálogo de géneros", () =>
 // La base devuelve las sesiones del usuario de los últimos 30 días, de la más
 // nueva a la más vieja. La aplicación recorre la lista y se queda con la
 // primera sesión de cada título: si no está terminada, va a "Seguir viendo".
-// Se filtra comparando el subdocumento meta completo, { meta: { user_id } },
-// para que MongoDB use el índice automático de la serie temporal (meta_1_ts_1).
 // -----------------------------------------------------------------------------
 const sesiones = db.views.find(
-  { meta: { user_id: IDS.cinefan }, ts: { $gte: haceDias(30) } },
+  { user_id: IDS.cinefan, ts: { $gte: haceDias(30) } },
   { media_id: 1, ts: 1, episode: 1, minutes: 1, completed: 1 }
 ).sort({ ts: -1 }).toArray();
 

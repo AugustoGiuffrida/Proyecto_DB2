@@ -39,11 +39,11 @@ mostrar("2.3 ¿El Eternauta está en la lista de CineFan88?", () =>
 
 // -----------------------------------------------------------------------------
 // 2.4 Tu última reproducción de este título
-// Filtra por el usuario (metaField) y ordena por fecha (timeField).
+// Filtra por usuario y título, y ordena por fecha (índice views_por_usuario).
 // -----------------------------------------------------------------------------
 mostrar("2.4 Última reproducción de CineFan88", () =>
   db.views.find(
-    { meta: { user_id: IDS.cinefan }, media_id: IDS.eternauta },
+    { user_id: IDS.cinefan, media_id: IDS.eternauta },
     { _id: 0, ts: 1, episode: 1, minutes: 1, completed: 1 }
   ).sort({ ts: -1 }).limit(1)
 );
