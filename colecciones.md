@@ -142,7 +142,7 @@ Películas y series en una sola colección (**patrón polimórfico**): comparten
   db.media.find({ "directors.person_id": id })   // títulos que dirigió (por ejemplo, Christopher Nolan)
   ```
 - La biografía, la fecha y el país solo aparecen en la ficha de la persona, por eso no se copian en `media`.
-- *Costo asumido:* si una persona cambia de nombre, hay que actualizar la copia en cada título de `media` donde aparece. Es un caso muy raro (ver la consulta 6.7 de [`consultas.md`](consultas.md)).
+- *Costo asumido:* si una persona cambia de nombre, hay que actualizar la copia en cada título de `media` donde aparece. Es un caso muy raro.
 
 ---
 

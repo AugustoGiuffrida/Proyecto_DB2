@@ -30,18 +30,10 @@ mostrar("2.2 Reseñas más recientes", () =>
 );
 
 // -----------------------------------------------------------------------------
-// 2.3 ¿Está en Mi lista? (estado del botón "+ Mi lista")
-// { watchlist: id } se cumple si el array contiene ese id.
-// -----------------------------------------------------------------------------
-mostrar("2.3 ¿El Eternauta está en la lista de CineFan88?", () =>
-  db.users.countDocuments({ _id: IDS.cinefan, watchlist: IDS.eternauta }) === 1
-);
-
-// -----------------------------------------------------------------------------
-// 2.4 Tu última reproducción de este título
+// 2.3 Tu última reproducción de este título
 // Filtra por usuario y título, y ordena por fecha (índice views_por_usuario).
 // -----------------------------------------------------------------------------
-mostrar("2.4 Última reproducción de CineFan88", () =>
+mostrar("2.3 Última reproducción de CineFan88", () =>
   db.views.find(
     { user_id: IDS.cinefan, media_id: IDS.eternauta },
     { _id: 0, started_at: 1, episode: 1, minutes: 1, completed: 1 }
@@ -49,11 +41,11 @@ mostrar("2.4 Última reproducción de CineFan88", () =>
 );
 
 // -----------------------------------------------------------------------------
-// 2.5 Títulos similares
+// 2.4 Títulos similares
 // $in: títulos que tienen al menos uno de los géneros indicados.
 // $ne: excluye el título que se está viendo.
 // -----------------------------------------------------------------------------
-mostrar("2.5 Si te gustó El Eternauta", () =>
+mostrar("2.4 Si te gustó El Eternauta", () =>
   db.media.find(
     { genre_ids: { $in: titulo.genre_ids }, _id: { $ne: titulo._id } },
     { title: 1, genre_ids: 1, "rating.avg": 1 }

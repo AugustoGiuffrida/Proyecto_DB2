@@ -2,30 +2,6 @@
 
 Todas las consultas de la aplicación, organizadas por pantalla del prototipo ([`interfaces/`](interfaces/)). Al final hay dos secciones más: las operaciones de escritura y los reportes analíticos.
 
-Las consultas usan **solo lo visto en clase**, más unas pocas extensiones mínimas (ver la tabla siguiente). Para cada una se indica qué sección de la interfaz alimenta, por qué está escrita así y un extracto del resultado real obtenido contra la base.
-
-## Qué se usa
-
-| Visto en clase | Dónde |
-|---|---|
-| `find` / `findOne` con condiciones, AND implícito | todas las secciones |
-| `$lt`, `$lte`, `$gt`, `$gte`, `$ne` | 1.3, 2.5, 4.5, 6.1 |
-| `$in` | 1.3, 2.5, 4.6 |
-| Expresiones regulares (`/texto/i`) | 1.8 |
-| `sort` | casi todas |
-| `insertOne`, `updateOne`, `deleteOne`, `$set`, `$unset` | 6.3–6.8 |
-| `$push`, `$push` + `$each`, `$pop`, `$pull` | 6.1, 6.2 |
-| `aggregate`: `$match`, `$group` + `$sum` | 1.4, 3.3, 4.4, 5.4, 6.3, 7.1, 7.3–7.7 |
-| `$project`: incluir campos, renombrar, valores calculados, `$cond` | 1.4, 3.3, 5.2–5.5, 7.3, 7.7 |
-| `$lookup` | 1.4, 5.2, 5.3, 5.5, 7.7 |
-| Bucles `for` en la shell | 1.3, 6.7, 7.2 |
-
-| Extensión mínima | Por qué |
-|---|---|
-| `limit()`, `skip()`, `countDocuments()` | paginado y contadores de las pantallas |
-| `$sort` y `$limit` dentro de `aggregate` | hacen lo mismo que `sort()` y `limit()` de `find` |
-| `$avg` dentro de `$group` | se usa igual que `$sum`, pero calcula el promedio |
-| `$divide` en `$project` | valor calculado, igual que `$add` |
 
 ## Cómo ejecutarlas
 
@@ -85,39 +61,7 @@ db.genres.find({}, { name: 1, color: 1 }).sort({ name: 1 })
 …  // 12 géneros
 ```
 
-### 1.3 Seguir viendo
-
-Se resuelve entre la base y la aplicación:
-1. La base devuelve las sesiones del usuario de los últimos 30 días, de la más nueva a la más vieja (índice `views_por_usuario`).
-2. La aplicación recorre la lista y se queda con la **primera** sesión de cada título, que es la más reciente. Si no está terminada, va a "Seguir viendo".
-3. Con `$in` se traen los nombres de esos títulos en una sola consulta.
-
-```js
-const sesiones = db.views.find(
-  { user_id: ObjectId("665f0c000000000000000001"),
-    started_at: { $gte: ISODate("2026-09-06T12:00:00Z") } },
-  { media_id: 1, started_at: 1, episode: 1, minutes: 1, completed: 1 }
-).sort({ started_at: -1 }).toArray()
-
-const yaVisto = {}
-const seguirViendo = []
-for (const s of sesiones) {
-  const titulo = s.media_id.toString()
-  if (yaVisto[titulo]) continue          // ya tenemos la sesión más nueva de este título
-  yaVisto[titulo] = true
-  if (!s.completed) seguirViendo.push(s)
-}
-
-db.media.find({ _id: { $in: seguirViendo.map((s) => s.media_id) } }, { title: 1 })
-```
-```js
-{ titulo: "El pacto blanco",    started_at: 2026-10-06 03:33, minutos: 56 }
-{ titulo: "Guerra prohibida",   started_at: 2026-10-04 01:14, minutos: 21, episodio: { season: 1, number: 11 } }
-{ titulo: "El Eternauta",       started_at: 2026-10-03 23:10, minutos: 32, episodio: { season: 1, number: 4 } }
-…  // 10 títulos
-```
-
-### 1.4 Top 10 de la semana
+### 1.3 Top 10 de la semana
 
 Cada etapa del `aggregate` hace una cosa:
 - `$match` toma las reproducciones de los últimos 7 días (índice `views_por_fecha`).
@@ -143,7 +87,7 @@ db.views.aggregate([
 …  // 10 resultados
 ```
 
-### 1.5 Recién agregadas
+### 1.4 Recién agregadas
 
 `created_at` es la fecha de **alta en el catálogo**, no la de estreno.
 
@@ -157,7 +101,7 @@ db.media.find({}, { title: 1, type: 1, release_year: 1, created_at: 1 })
 …
 ```
 
-### 1.6 Recomendadas por género favorito
+### 1.5 Recomendadas por género favorito
 
 Se resuelve en dos pasos:
 1. El género sale del documento del usuario.
@@ -178,7 +122,7 @@ db.media.find({ genre_ids: "ciencia-ficcion" }, { title: 1, type: 1, "rating.avg
 …
 ```
 
-### 1.7 Series para maratonear
+### 1.6 Filtrar media por tipo
 
 Es el patrón polimórfico en acción: películas y series están en la misma colección y se separan por `type`.
 
@@ -189,20 +133,6 @@ db.media.find({ type: "series" }, { title: 1, release_year: 1, "rating.avg": 1 }
 ```js
 { title: "Río prohibido", release_year: 2018, rating: { avg: 9.5 } }
 { title: "Breaking Bad",  release_year: 2008, rating: { avg: 9.3 } }
-…
-```
-
-### 1.8 Barra de búsqueda
-
-La expresión regular `/noche/i` encuentra "noche" en cualquier parte del título, sin distinguir mayúsculas de minúsculas.
-
-```js
-db.media.find({ title: /noche/i }, { title: 1, type: 1, release_year: 1 })
-  .sort({ title: 1 }).limit(8)
-```
-```js
-{ title: "Batman: El caballero de la noche", type: "movie", release_year: 2008 }
-{ title: "Código Medianoche", type: "movie", release_year: 2014 }
 …
 ```
 
@@ -241,17 +171,7 @@ db.reviews.find(
 …
 ```
 
-### 2.3 ¿Está en Mi lista?
-
-Define el estado del botón "+ Mi lista". `{ watchlist: id }` se cumple si el array contiene ese valor.
-
-```js
-db.users.countDocuments({ _id: ObjectId("665f0c000000000000000001"),
-                          watchlist: ObjectId("665f0a000000000000000010") })
-// → 0 (no está en la lista)
-```
-
-### 2.4 Última reproducción del usuario
+### 2.3 Última reproducción del usuario
 
 Filtra por usuario y título, y ordena por fecha. Usa el índice `views_por_usuario` (`{ user_id: 1, started_at: -1 }`).
 
@@ -265,7 +185,7 @@ db.views.find(
 { started_at: 2026-10-03 23:10, episode: { season: 1, number: 4 }, minutes: 32, completed: false }
 ```
 
-### 2.5 Títulos similares
+### 2.4 Títulos similares
 
 - `$in` busca los títulos que tienen **al menos uno** de los géneros indicados.
 - `$ne` excluye el título que se está viendo.
@@ -380,14 +300,7 @@ db.media.find({ genre_ids: "ciencia-ficcion", type: "movie" }, { title: 1, type:
 …                                                      …
 ```
 
-### 4.3 Cantidad de resultados
-
-```js
-db.media.countDocuments({ genre_ids: "ciencia-ficcion", type: "movie" })
-// → 310
-```
-
-### 4.4 Cantidad por tipo (contadores de los botones Películas / Series)
+### 4.3 Cantidad por tipo (contadores de los botones Películas / Series)
 
 ```js
 db.media.aggregate([
@@ -400,7 +313,7 @@ db.media.aggregate([
 { _id: "movie",  titulos: 310 }
 ```
 
-### 4.5 Rango de años y de rating (`$gte` / `$lte`)
+### 4.4 Rango de años y de rating (`$gte` / `$lte`)
 
 ```js
 db.media.find(
@@ -414,7 +327,7 @@ db.media.find(
 …  // 14 resultados
 ```
 
-### 4.6 Varios géneros a la vez (`$in`)
+### 4.5 Varios géneros a la vez (`$in`)
 
 ```js
 db.media.find({ genre_ids: { $in: ["ciencia-ficcion", "terror"] } }, { title: 1, genre_ids: 1, "rating.avg": 1 })
@@ -484,23 +397,7 @@ db.views.aggregate([
 …  // 69 sesiones
 ```
 
-### 5.4 Horas vistas en el último mes
-
-`$group` suma los minutos y `$project` calcula las horas dividiendo por 60.
-
-```js
-db.views.aggregate([
-  { $match: { user_id: ObjectId("665f0c000000000000000001"),
-              started_at: { $gte: ISODate("2026-09-06T12:00:00Z") } } },
-  { $group: { _id: null, minutos: { $sum: "$minutes" }, sesiones: { $sum: 1 } } },
-  { $project: { _id: 0, sesiones: 1, horas: { $divide: ["$minutos", 60] } } }
-])
-```
-```js
-{ sesiones: 69, horas: 85.73 }
-```
-
-### 5.5 Mis reseñas
+### 5.4 Mis reseñas
 
 La colección `reviews` también se consulta desde el usuario. El nombre del título se trae con `$lookup`.
 
@@ -599,22 +496,7 @@ segunda reseña del mismo usuario → rechazada (E11000 duplicate key: índice �
 deleteOne + recálculo →  { avg: 9.3, count: 1242 }   (deshecho)
 ```
 
-### 6.4 Cambiar de plan (`$set` en un subdocumento)
-
-La notación con punto (`"subscription.plan"`) modifica un campo dentro de un documento embebido.
-
-```js
-db.users.updateOne(
-  { _id: ObjectId("665f0c000000000000000001") },
-  { $set: { "subscription.plan": "Estándar", "subscription.billing": "mensual" } }
-)
-```
-```
-antes:    { plan: "Premium", billing: "anual", renewal_date: 2027-01-15 }
-después:  { plan: "Estándar", billing: "mensual", renewal_date: 2027-01-15 }
-```
-
-### 6.5 Borrar un dato opcional (`$unset`)
+### 6.4 Borrar un dato opcional (`$unset`)
 
 ```js
 db.users.updateOne({ _id: ObjectId("665f0c000000000000000001") }, { $unset: { birth_date: "" } })
@@ -623,7 +505,7 @@ db.users.updateOne({ _id: ObjectId("665f0c000000000000000001") }, { $unset: { bi
 $unset → birth_date: undefined   (el campo ya no existe en el documento)
 ```
 
-### 6.6 Renombrar un género
+### 6.5 Renombrar un género
 
 Como `media.genre_ids` guarda el slug y no el nombre, renombrar es modificar **un solo documento**. Ningún título cambia.
 
@@ -635,26 +517,7 @@ genres.updateOne → { coincidencias: 1, modificados: 1 }
 títulos que siguen apuntando al género: 446 (no se tocaron)
 ```
 
-### 6.7 Corregir el nombre de una persona: el costo de la referencia extendida
-
-El nombre está copiado en `media.cast`, así que además de `people` hay que actualizar cada título donde aparece la persona. Se recorren con un `for`: en cada título se corrige el array `cast` y se guarda con `$set`. Es el costo que se acepta para no consultar `people` en cada detalle, y es una operación muy poco frecuente.
-
-```js
-db.people.updateOne({ _id: ObjectId("665f0b000000000000000010") }, { $set: { name: "Ricardo A. Darín" } })
-
-for (const m of db.media.find({ "cast.person_id": ObjectId("665f0b000000000000000010") }, { cast: 1 }).toArray()) {
-  for (const c of m.cast) {
-    if (c.person_id.equals(ObjectId("665f0b000000000000000010"))) c.name = "Ricardo A. Darín"
-  }
-  db.media.updateOne({ _id: m._id }, { $set: { cast: m.cast } })
-}
-```
-```
-títulos actualizados: 4
-en El Eternauta: Ricardo A. Darín
-```
-
-### 6.8 Registrar una reproducción
+### 6.6 Registrar una reproducción
 
 Cada reproducción es un documento nuevo en `views`.
 
@@ -687,20 +550,7 @@ db.media.aggregate([
 { _id: "series", titulos: 909,  rating_promedio: 6.84 }
 ```
 
-### 7.2 Títulos por género
-
-Se recorren los géneros con un `for` y se cuentan los títulos de cada uno.
-
-```js
-for (const g of db.genres.find().toArray()) {
-  print(g.name, db.media.countDocuments({ genre_ids: g._id }))
-}
-```
-```
-Drama 806 · Comedia 711 · Acción 663 · Thriller 609 · Crimen 483 · Ciencia Ficción 446 · Aventura 440 · …
-```
-
-### 7.3 Clasificación de títulos con `$cond`
+### 7.2 Clasificación de títulos con `$cond`
 
 `$project` agrega un campo calculado: "Destacado" si el rating es 8 o más, "Resto" si no. Después `$group` cuenta cuántos hay de cada clase.
 
@@ -715,7 +565,7 @@ db.media.aggregate([
 { _id: "Destacado", titulos: 333 }
 ```
 
-### 7.4 Distribución de puntajes de las reseñas
+### 7.3 Distribución de puntajes de las reseñas
 
 ```js
 db.reviews.aggregate([
@@ -731,7 +581,7 @@ db.reviews.aggregate([
 …
 ```
 
-### 7.5 Usuarios por país
+### 7.4 Usuarios por país
 
 ```js
 db.users.aggregate([
@@ -746,7 +596,7 @@ db.users.aggregate([
 …
 ```
 
-### 7.6 Usuarios por plan (campo de un subdocumento)
+### 7.5 Usuarios por plan (campo de un subdocumento)
 
 ```js
 db.users.aggregate([
@@ -760,7 +610,7 @@ db.users.aggregate([
 { _id: "Premium",  usuarios: 2481 }
 ```
 
-### 7.7 Los usuarios que más miraron en el último mes
+### 7.6 Los usuarios que más miraron en el último mes
 
 `$group` sobre `views` suma los minutos de cada usuario, y `$lookup` trae el username y el plan.
 

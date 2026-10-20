@@ -43,22 +43,10 @@ mostrar("5.3 Historial (últimos 30 días)", () =>
 , { limite: 8 });
 
 // -----------------------------------------------------------------------------
-// 5.4 Horas vistas en el último mes (encabezado del perfil)
-// $group suma los minutos; $project calcula las horas dividiendo por 60.
-// -----------------------------------------------------------------------------
-mostrar("5.4 Horas vistas en los últimos 30 días", () =>
-  db.views.aggregate([
-    { $match: { user_id: IDS.cinefan, started_at: { $gte: haceDias(30) } } },
-    { $group: { _id: null, minutos: { $sum: "$minutes" }, sesiones: { $sum: 1 } } },
-    { $project: { _id: 0, sesiones: 1, horas: { $divide: ["$minutos", 60] } } },
-  ])
-);
-
-// -----------------------------------------------------------------------------
-// 5.5 Mis reseñas, con el título de cada una
+// 5.4 Mis reseñas, con el título de cada una
 // La misma colección reviews se consulta ahora desde el usuario.
 // -----------------------------------------------------------------------------
-mostrar("5.5 Mis reseñas", () =>
+mostrar("5.4 Mis reseñas", () =>
   db.reviews.aggregate([
     { $match: { user_id: IDS.cinefan } },
     { $sort: { created_at: -1 } },

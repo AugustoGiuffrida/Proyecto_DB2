@@ -40,16 +40,9 @@ mostrar("4.2 Ordenadas por estreno (más nuevas primero)", () =>
 );
 
 // -----------------------------------------------------------------------------
-// 4.3 Total de resultados ("310 títulos")
+// 4.3 Cantidad por tipo (los contadores de los botones Películas / Series)
 // -----------------------------------------------------------------------------
-mostrar("4.3 Cantidad de resultados", () =>
-  db.media.countDocuments({ genre_ids: "ciencia-ficcion", type: "movie" })
-);
-
-// -----------------------------------------------------------------------------
-// 4.4 Cantidad por tipo (los contadores de los botones Películas / Series)
-// -----------------------------------------------------------------------------
-mostrar("4.4 Títulos de ciencia ficción por tipo", () =>
+mostrar("4.3 Títulos de ciencia ficción por tipo", () =>
   db.media.aggregate([
     { $match: { genre_ids: "ciencia-ficcion" } },
     { $group: { _id: "$type", titulos: { $sum: 1 } } },
@@ -57,9 +50,9 @@ mostrar("4.4 Títulos de ciencia ficción por tipo", () =>
 );
 
 // -----------------------------------------------------------------------------
-// 4.5 Filtro por rango ($gte / $lte): ciencia ficción de los 90 con buen rating
+// 4.4 Filtro por rango ($gte / $lte): ciencia ficción de los 90 con buen rating
 // -----------------------------------------------------------------------------
-mostrar("4.5 Ciencia ficción de los 90 con rating ≥ 7.5", () =>
+mostrar("4.4 Ciencia ficción de los 90 con rating ≥ 7.5", () =>
   db.media.find(
     { genre_ids: "ciencia-ficcion", release_year: { $gte: 1990, $lte: 1999 }, "rating.avg": { $gte: 7.5 } },
     CARD
@@ -67,9 +60,9 @@ mostrar("4.5 Ciencia ficción de los 90 con rating ≥ 7.5", () =>
 );
 
 // -----------------------------------------------------------------------------
-// 4.6 Varios géneros a la vez ($in): ciencia ficción o terror
+// 4.5 Varios géneros a la vez ($in): ciencia ficción o terror
 // -----------------------------------------------------------------------------
-mostrar("4.6 Ciencia ficción o terror, mejor valorados", () =>
+mostrar("4.5 Ciencia ficción o terror, mejor valorados", () =>
   db.media.find({ genre_ids: { $in: ["ciencia-ficcion", "terror"] } }, { title: 1, genre_ids: 1, "rating.avg": 1 })
     .sort({ "rating.avg": -1 }).limit(10)
 );

@@ -76,16 +76,16 @@ Al terminar, recrea todos los índices del modelo y verifica que, con todos pres
 | # | Consulta | Índice | Plan sin índice | Plan con índice | Docs examinados (sin → con) | Tiempo promedio (sin → con) |
 |---|---|---|---|---|---|---|
 | 5.3 | Historial de un usuario | `views_por_usuario` | COLLSCAN → SORT | IXSCAN → FETCH | **1.000.010 → 69** | **282,00 → 1,20 ms** |
-| 1.4 | Top 10 de la semana | `views_por_fecha` | COLLSCAN → GROUP | IXSCAN → FETCH → GROUP | **1.000.010 → 96.273** | **195,75 → 71,30 ms** |
+| 1.3 | Top 10 de la semana | `views_por_fecha` | COLLSCAN → GROUP | IXSCAN → FETCH → GROUP | **1.000.010 → 96.273** | **195,75 → 71,30 ms** |
 | 2.2 | Reseñas de un título | `reviews_por_titulo` | COLLSCAN → SORT | IXSCAN → FETCH → LIMIT | **150.012 → 10** | **44,95 → 0,50 ms** |
-| 5.5 | Mis reseñas (+ `$lookup`) | `reviews_por_usuario` | COLLSCAN → SORT → EQ_LOOKUP | IXSCAN → FETCH → EQ_LOOKUP | **150.038 → 52** | **34,20 → 1,50 ms** |
+| 5.4 | Mis reseñas (+ `$lookup`) | `reviews_por_usuario` | COLLSCAN → SORT → EQ_LOOKUP | IXSCAN → FETCH → EQ_LOOKUP | **150.038 → 52** | **34,20 → 1,50 ms** |
 | login | Usuario por email | `users_email_unico` | COLLSCAN | EXPRESS_IXSCAN | 10.006 → 1 | 3,35 → 0,40 ms |
 | 3.2 | Filmografía (`cast.person_id`) | `media_reparto` | COLLSCAN → SORT | IXSCAN → FETCH → SORT | 3.016 → 4 | 3,45 → 0,50 ms |
 | 4.2 | Películas de un género por rating | `media_genero_tipo_rating` | COLLSCAN → SORT | IXSCAN → FETCH → LIMIT | 3.016 → 24 | 2,05 → 0,60 ms |
-| 1.5 | Recién agregadas | `media_recientes` | COLLSCAN → SORT | IXSCAN → FETCH → LIMIT | 3.016 → 12 | 1,75 → 0,55 ms |
-| 1.7 | Series mejor valoradas | `media_tipo_rating` | COLLSCAN → SORT | IXSCAN → FETCH → LIMIT | 3.016 → 12 | 1,70 → 0,55 ms |
-| 1.8b | Búsqueda `/^Noche/` (empieza con) | `media_titulo` | COLLSCAN → LIMIT | IXSCAN → FETCH → LIMIT | 872 → 8 | 0,90 → 0,45 ms |
-| 1.8 | Búsqueda `/noche/i` (contiene) | `media_titulo` | COLLSCAN → LIMIT | IXSCAN → FETCH → LIMIT | 322 → 8 (192 claves) | 0,65 → 0,65 ms |
+| 1.4 | Recién agregadas | `media_recientes` | COLLSCAN → SORT | IXSCAN → FETCH → LIMIT | 3.016 → 12 | 1,75 → 0,55 ms |
+| 1.6 | Series mejor valoradas | `media_tipo_rating` | COLLSCAN → SORT | IXSCAN → FETCH → LIMIT | 3.016 → 12 | 1,70 → 0,55 ms |
+| búsq. | Búsqueda `/^Noche/` (empieza con) | `media_titulo` | COLLSCAN → LIMIT | IXSCAN → FETCH → LIMIT | 872 → 8 | 0,90 → 0,45 ms |
+| búsq. | Búsqueda `/noche/i` (contiene) | `media_titulo` | COLLSCAN → LIMIT | IXSCAN → FETCH → LIMIT | 322 → 8 (192 claves) | 0,65 → 0,65 ms |
 | 1.1 | Título destacado | `media_destacado` | COLLSCAN → LIMIT | EXPRESS_IXSCAN | 10 → 1 | 0,65 → 0,55 ms |
 
 Los números se repitieron en varias corridas, con diferencias menores al 10 % (por ejemplo, 2.2 sin índice: 50,05, 46,15 y 44,95 ms).
@@ -115,7 +115,7 @@ Sin índice aparece la etapa `SORT`: MongoDB junta todos los documentos que cump
 - Las primeras claves resuelven el **filtro**: igualdad por género y tipo.
 - La última ya viene **ordenada** por rating.
 
-Por eso desaparece el `SORT` y el `LIMIT` corta apenas encuentra los primeros resultados (consultas 4.2, 1.7, 1.5, 2.2 y 5.3). El orden de las claves importa: primero los campos de igualdad, después el campo de orden.
+Por eso desaparece el `SORT` y el `LIMIT` corta apenas encuentra los primeros resultados (consultas 4.2, 1.6, 1.4, 2.2 y 5.3). El orden de las claves importa: primero los campos de igualdad, después el campo de orden.
 
 En la filmografía (3.2) sigue apareciendo `SORT`, porque el índice es solo `{ "cast.person_id": 1 }` y el orden por año se hace en memoria. Son 4 documentos, así que no vale la pena agregar `release_year` al índice.
 

@@ -97,21 +97,9 @@ recalcularRating(IDS.breakingBad);
 print(`    deleteOne + recálculo →  ${rating()}   (deshecho)`);
 
 // -----------------------------------------------------------------------------
-// 6.4 Cambiar de plan ($set sobre campos de un subdocumento)
-// La notación con punto modifica campos de un documento embebido.
+// 6.4 Borrar un dato opcional ($unset)
 // -----------------------------------------------------------------------------
-print("\n▸ 6.4 Cambiar el plan de CineFan88 a Estándar mensual");
-const plan = () => linea(db.users.findOne({ _id: IDS.cinefan }).subscription);
-print(`    antes:    ${plan()}`);
-db.users.updateOne({ _id: IDS.cinefan }, { $set: { "subscription.plan": "Estándar", "subscription.billing": "mensual" } });
-print(`    después:  ${plan()}`);
-db.users.updateOne({ _id: IDS.cinefan }, { $set: { "subscription.plan": "Premium", "subscription.billing": "anual" } });
-print(`    deshecho: ${plan()}`);
-
-// -----------------------------------------------------------------------------
-// 6.5 Borrar un dato opcional ($unset)
-// -----------------------------------------------------------------------------
-print("\n▸ 6.5 Quitar la fecha de nacimiento (dato opcional)");
+print("\n▸ 6.4 Quitar la fecha de nacimiento (dato opcional)");
 const nacimiento = db.users.findOne({ _id: IDS.cinefan }).birth_date;
 db.users.updateOne({ _id: IDS.cinefan }, { $unset: { birth_date: "" } });
 print(`    $unset → birth_date: ${db.users.findOne({ _id: IDS.cinefan }).birth_date}`);
@@ -119,10 +107,10 @@ db.users.updateOne({ _id: IDS.cinefan }, { $set: { birth_date: nacimiento } });
 print(`    deshecho → birth_date: ${linea(db.users.findOne({ _id: IDS.cinefan }).birth_date)}`);
 
 // -----------------------------------------------------------------------------
-// 6.6 Renombrar un género: UN solo documento
+// 6.5 Renombrar un género: UN solo documento
 // Como media.genre_ids guarda el slug (no el nombre), ningún título cambia.
 // -----------------------------------------------------------------------------
-print("\n▸ 6.6 Renombrar \"Ciencia Ficción\" a \"Sci-Fi\"");
+print("\n▸ 6.5 Renombrar \"Ciencia Ficción\" a \"Sci-Fi\"");
 r = db.genres.updateOne({ _id: "ciencia-ficcion" }, { $set: { name: "Sci-Fi" } });
 print(`    genres.updateOne → ${linea(resultado(r))}`);
 print(`    títulos que siguen apuntando al género: ${db.media.countDocuments({ genre_ids: "ciencia-ficcion" })} (no se tocaron)`);
@@ -130,33 +118,9 @@ db.genres.updateOne({ _id: "ciencia-ficcion" }, { $set: { name: "Ciencia Ficció
 print(`    deshecho → ${db.genres.findOne({ _id: "ciencia-ficcion" }).name}`);
 
 // -----------------------------------------------------------------------------
-// 6.7 Corregir el nombre de una persona: el COSTO de la referencia extendida
-// El nombre está copiado en media.cast, así que además de people hay que
-// actualizar cada título donde aparece. Se recorren con un for: en cada uno
-// se corrige el array cast y se guarda con $set.
+// 6.6 Registrar una reproducción
 // -----------------------------------------------------------------------------
-print("\n▸ 6.7 Corregir el nombre de Ricardo Darín en people y en media.cast");
-const renombrarPersona = function (personId, nombre) {
-  db.people.updateOne({ _id: personId }, { $set: { name: nombre } });
-  let titulos = 0;
-  for (const m of db.media.find({ "cast.person_id": personId }, { cast: 1 }).toArray()) {
-    for (const c of m.cast) {
-      if (c.person_id.equals(personId)) c.name = nombre;
-    }
-    db.media.updateOne({ _id: m._id }, { $set: { cast: m.cast } });
-    titulos++;
-  }
-  return titulos;
-};
-print(`    títulos actualizados: ${renombrarPersona(IDS.darin, "Ricardo A. Darín")}`);
-print(`    en El Eternauta: ${db.media.findOne({ _id: IDS.eternauta }).cast[0].name}`);
-renombrarPersona(IDS.darin, "Ricardo Darín");
-print(`    deshecho → ${db.media.findOne({ _id: IDS.eternauta }).cast[0].name}`);
-
-// -----------------------------------------------------------------------------
-// 6.8 Registrar una reproducción
-// -----------------------------------------------------------------------------
-print("\n▸ 6.8 Registrar una reproducción de El Eternauta, episodio 5");
+print("\n▸ 6.6 Registrar una reproducción de El Eternauta, episodio 5");
 const sesion = { user_id: IDS.cinefan, media_id: IDS.eternauta, started_at: new Date(),
                  episode: { season: 1, number: 5 }, minutes: 58, completed: true };
 db.views.insertOne(sesion);

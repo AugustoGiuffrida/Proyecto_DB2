@@ -30,7 +30,7 @@ La teoría vista (clases en `../Teoria_mongo/*.ppsx`) cubre:
 - **Idioma:** todo en español (código, comentarios, documentación, commits).
 - **Simplicidad:** todo tiene que poder **explicarse en un oral**. Preferir soluciones simples y justificadas antes que patrones avanzados. Consultar antes de agregar colecciones o funcionalidades.
 - **Orden de trabajo:** diseño y modelo primero, después la implementación.
-- **Solo lo visto en clase:** las consultas usan únicamente los operadores de la teoría (ver la tabla "Qué se usa" en `consultas.md`). Nada de `$facet`, `$unwind`, `$text`, `$merge`, `$elemMatch`, `$addToSet`, operadores posicionales, `arrayFilters`, operadores de fecha ni `$lookup` con `pipeline`. Si hace falta algo más, se resuelve con un `for` en la shell o en la aplicación, o se consulta antes.
+- **Solo lo visto en clase:** las consultas usan únicamente los operadores de la teoría. Nada de `$facet`, `$unwind`, `$text`, `$merge`, `$elemMatch`, `$addToSet`, operadores posicionales, `arrayFilters`, operadores de fecha ni `$lookup` con `pipeline`. Si hace falta algo más, se resuelve con un `for` en la shell o en la aplicación, o se consulta antes.
 - **Git:** commitear directo en `main`, sin ramas, y solo cuando se pida. Lo mismo para el push.
 - **Coherencia:** cuando cambia el modelo, actualizar juntos `colecciones.md`, el prototipo (`interfaces/assets/data.js` y `pages.js`) y los scripts de `db/`.
 
