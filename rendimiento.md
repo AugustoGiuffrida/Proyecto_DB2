@@ -1,7 +1,5 @@
 # Rendimiento — Fotograma
 
-Medición del rendimiento de las consultas de [`consultas.md`](consultas.md) sin índice y con índice, usando los comandos de la clase de índices.
-
 ## 1. Comandos
 
 ```js
@@ -112,25 +110,6 @@ El índice `_id_` no se puede eliminar.
 ---
 
 ## 5. Medición con `executionTimeMillis`
-
-Para cada colección se siguen estos pasos:
-1. `getIndexes()` para ver los índices.
-2. `dropIndex(…)` para eliminarlos.
-3. Se mide cada consulta con `explain("executionStats")` → **sin índice**. En el resultado, el tiempo es el valor de `executionStats.executionTimeMillis`.
-4. `createIndex(…)` para volver a crearlos.
-5. Se mide cada consulta otra vez → **con índice**.
-
-El script [`rendimiento/medir.js`](rendimiento/medir.js) hace todos los pasos y repite cada medición 5 veces, quedándose con el valor del medio:
-
-```bash
-mongosh rendimiento/medir.js
-```
-
-Con Docker: `docker compose exec mongo mongosh rendimiento/medir.js`. Tarda unos 10 segundos.
-
-Algunas consultas de `consultas.md` son `aggregate` (1.3, 5.3, 5.4). El índice se usa en la parte que filtra y ordena (`$match` y `$sort`), así que se mide esa parte con un `find` equivalente.
-
-En cada colección se mide además un `find()` **sin filtro**: devuelve todos los documentos, así que MongoDB siempre recorre la colección completa y el índice no cambia el tiempo. Sirve como referencia de cuánto tarda leer la colección entera.
 
 ### `media` (3.016 documentos)
 

@@ -1,2 +1,4 @@
 *.venv
 *__pycache__
+# Backups generados con mongodump / mongoexport (ver backup.md)
+backup/

@@ -45,7 +45,7 @@ La teoría vista (clases en `../Teoria_mongo/*.ppsx`) cubre:
 | `consultas.md` | Todas las consultas (por pantalla, escrituras y analítica) con explicación y resultados reales. Es el documento de referencia |
 | `consultas/` | Las mismas consultas como scripts de mongosh (`mongosh consultas/todas.js`). `6_escritura.js` deshace sus cambios al final |
 | `rendimiento.md`, `rendimiento/medir.js` | Comandos `createIndex` / `getIndexes` / `dropIndex` y `explain("executionStats").executionStats.executionTimeMillis` de cada consulta sin y con índice. Formato simple, como en la clase |
-| `guia.md` | **Desactualizado** (modelo anterior de 3 colecciones). Se rehace con la política de backup |
+| `backup.md` | `mongodump` / `mongorestore` / `mongoexport` / `mongoimport` probados, ejecutados desde la raíz del proyecto con salida en `./backup` (en `.gitignore`), y la política de backup (diario, 7 días, prueba semanal) |
 
 ## Modelo (resumen)
 
@@ -79,5 +79,4 @@ Base **`fotograma`**, con 6 colecciones:
 
 ## Próximos pasos
 
-1. Política de backup: `mongodump`/`mongorestore`, `mongoexport`, frecuencia, retención y prueba de restauración. Rehacer `guia.md`.
-2. Documento de requisitos (funcionales y no funcionales).
+1. Documento de requisitos (funcionales y no funcionales).
