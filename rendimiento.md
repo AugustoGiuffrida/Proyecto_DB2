@@ -14,15 +14,14 @@ db.coleccion.getIndexes()
 // Eliminar un índice por su nombre
 db.coleccion.dropIndex("nombre_del_indice")
 
-// Tiempo de ejecución de una consulta, en milisegundos
-db.coleccion.find({ … }).explain("executionStats").executionStats.executionTimeMillis
+// Ejecutar una consulta y ver cómo la resolvió MongoDB
+// (el tiempo, en milisegundos, está en executionStats.executionTimeMillis)
+db.coleccion.find().explain("executionStats")
 ```
 
 ---
 
 ## 2. Crear los índices
-
-Están en [`db/04_indices.js`](db/04_indices.js). El índice `_id_` lo crea MongoDB automáticamente en cada colección.
 
 ```js
 // ---------------------------------------------------------------- media
@@ -117,7 +116,7 @@ El índice `_id_` no se puede eliminar.
 Para cada colección se siguen estos pasos:
 1. `getIndexes()` para ver los índices.
 2. `dropIndex(…)` para eliminarlos.
-3. Se mide cada consulta con `explain("executionStats")` → **sin índice**.
+3. Se mide cada consulta con `explain("executionStats")` → **sin índice**. En el resultado, el tiempo es el valor de `executionStats.executionTimeMillis`.
 4. `createIndex(…)` para volver a crearlos.
 5. Se mide cada consulta otra vez → **con índice**.
 
@@ -131,70 +130,60 @@ Con Docker: `docker compose exec mongo mongosh rendimiento/medir.js`. Tarda unos
 
 Algunas consultas de `consultas.md` son `aggregate` (1.3, 5.3, 5.4). El índice se usa en la parte que filtra y ordena (`$match` y `$sort`), así que se mide esa parte con un `find` equivalente.
 
+En cada colección se mide además un `find()` **sin filtro**: devuelve todos los documentos, así que MongoDB siempre recorre la colección completa y el índice no cambia el tiempo. Sirve como referencia de cuánto tarda leer la colección entera.
+
 ### `media` (3.016 documentos)
 
 ```js
+db.media.find().explain("executionStats")                                                         // sin filtro
+
 db.media.find({ is_featured: true })
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 1.1
+  .explain("executionStats")                                                                      // 1.1
 
-db.media.find({}).sort({ created_at: -1 }).limit(12)
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 1.4
+db.media.find({}).sort({ created_at: -1 })
+  .explain("executionStats")                                                                      // 1.4
 
-db.media.find({ genre_ids: "ciencia-ficcion" }).sort({ "rating.avg": -1 }).limit(12)
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 1.5
+db.media.find({ genre_ids: "ciencia-ficcion" }).sort({ "rating.avg": -1 })
+  .explain("executionStats")                                                                      // 1.5
 
-db.media.find({ type: "series" }).sort({ "rating.avg": -1 }).limit(12)
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 1.6
+db.media.find({ type: "series" }).sort({ "rating.avg": -1 })
+  .explain("executionStats")                                                                      // 1.6
 
 db.media.find({ "cast.person_id": ObjectId("665f0b000000000000000010") }).sort({ release_year: -1 })
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 3.2
+  .explain("executionStats")                                                                      // 3.2
 
 db.media.find({ "directors.person_id": ObjectId("665f0b000000000000000001") }).sort({ release_year: -1 })
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 3.2
+  .explain("executionStats")                                                                      // 3.2
 
-db.media.find({ genre_ids: "ciencia-ficcion", type: "movie" }).sort({ "rating.avg": -1 }).limit(24)
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 4.2
+db.media.find({ genre_ids: "ciencia-ficcion", type: "movie" }).sort({ "rating.avg": -1 })
+  .explain("executionStats")                                                                      // 4.2
 ```
 
 ### `reviews` (150.012 documentos)
 
 ```js
-db.reviews.find({ media_id: ObjectId("665f0a000000000000000010") }).sort({ created_at: -1 }).limit(10)
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 2.2
+db.reviews.find().explain("executionStats")                                                       // sin filtro
+
+db.reviews.find({ media_id: ObjectId("665f0a000000000000000010") }).sort({ created_at: -1 })
+  .explain("executionStats")                                                                      // 2.2
 
 db.reviews.find({ user_id: ObjectId("665f0c000000000000000001") }).sort({ created_at: -1 })
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 5.4
+  .explain("executionStats")                                                                      // 5.4
 ```
 
 ### `views` (1.000.010 documentos)
 
 ```js
+db.views.find().explain("executionStats")                                                         // sin filtro
+
 db.views.find({ started_at: { $gte: ISODate("2026-09-29T12:00:00Z") } })
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 1.3
+  .explain("executionStats")                                                                      // 1.3
 
 db.views.find({ user_id: ObjectId("665f0c000000000000000001"), media_id: ObjectId("665f0a000000000000000010") })
-  .sort({ started_at: -1 }).limit(1)
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 2.3
+  .sort({ started_at: -1 })
+  .explain("executionStats")                                                                      // 2.3
 
 db.views.find({ user_id: ObjectId("665f0c000000000000000001"), started_at: { $gte: ISODate("2026-09-06T12:00:00Z") } })
   .sort({ started_at: -1 })
-  .explain("executionStats").executionStats.executionTimeMillis                                   // 5.3
+  .explain("executionStats")                                                                      // 5.3
 ```
-
-### Resultados
-
-| Consulta | Colección | Índice | `executionTimeMillis` sin índice | `executionTimeMillis` con índice |
-|---|---|---|---|---|
-| 1.1 Título destacado | `media` | `media_destacado` | 1 ms | 0 ms |
-| 1.4 Recién agregadas | `media` | `media_recientes` | 1 ms | 0 ms |
-| 1.5 Recomendadas por género | `media` | `media_genero_tipo_rating` | 1 ms | 0 ms |
-| 1.6 Filtrar por tipo (series) | `media` | `media_tipo_rating` | 1 ms | 0 ms |
-| 3.2 Títulos donde actuó una persona | `media` | `media_reparto` | 2 ms | 0 ms |
-| 3.2 Títulos que dirigió una persona | `media` | `media_directores` | 1 ms | 0 ms |
-| 4.2 Películas de un género por rating | `media` | `media_genero_tipo_rating` | 1 ms | 0 ms |
-| 2.2 Reseñas de un título | `reviews` | `reviews_por_titulo` | **47 ms** | **0 ms** |
-| 5.4 Mis reseñas | `reviews` | `reviews_por_usuario` | **46 ms** | **0 ms** |
-| 1.3 Top 10: reproducciones de la semana | `views` | `views_por_fecha` | **292 ms** | **69 ms** |
-| 2.3 Última reproducción del usuario | `views` | `views_por_usuario` | **300 ms** | **0 ms** |
-| 5.3 Historial de un usuario | `views` | `views_por_usuario` | **287 ms** | **0 ms** |
-

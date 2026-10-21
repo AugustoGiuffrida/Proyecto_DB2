@@ -59,20 +59,22 @@ const COLECCIONES = [
       db.media.createIndex({ is_featured: 1 }, { name: "media_destacado" });
     },
     consultas: [
+      ["—", "Todos los documentos (sin filtro)", "ninguno",
+        () => db.media.find()],
       ["1.1", "Título destacado", "media_destacado",
         () => db.media.find({ is_featured: true })],
       ["1.4", "Recién agregadas", "media_recientes",
-        () => db.media.find({}).sort({ created_at: -1 }).limit(12)],
+        () => db.media.find({}).sort({ created_at: -1 })],
       ["1.5", "Recomendadas por género", "media_genero_tipo_rating",
-        () => db.media.find({ genre_ids: "ciencia-ficcion" }).sort({ "rating.avg": -1 }).limit(12)],
+        () => db.media.find({ genre_ids: "ciencia-ficcion" }).sort({ "rating.avg": -1 })],
       ["1.6", "Filtrar por tipo (series)", "media_tipo_rating",
-        () => db.media.find({ type: "series" }).sort({ "rating.avg": -1 }).limit(12)],
+        () => db.media.find({ type: "series" }).sort({ "rating.avg": -1 })],
       ["3.2", "Títulos donde actuó una persona", "media_reparto",
         () => db.media.find({ "cast.person_id": DARIN }).sort({ release_year: -1 })],
       ["3.2", "Títulos que dirigió una persona", "media_directores",
         () => db.media.find({ "directors.person_id": NOLAN }).sort({ release_year: -1 })],
       ["4.2", "Películas de un género por rating", "media_genero_tipo_rating",
-        () => db.media.find({ genre_ids: "ciencia-ficcion", type: "movie" }).sort({ "rating.avg": -1 }).limit(24)],
+        () => db.media.find({ genre_ids: "ciencia-ficcion", type: "movie" }).sort({ "rating.avg": -1 })],
     ],
   },
   {
@@ -88,8 +90,10 @@ const COLECCIONES = [
       db.reviews.createIndex({ media_id: 1, user_id: 1 }, { name: "reviews_titulo_usuario_unico", unique: true });
     },
     consultas: [
+      ["—", "Todos los documentos (sin filtro)", "ninguno",
+        () => db.reviews.find()],
       ["2.2", "Reseñas de un título", "reviews_por_titulo",
-        () => db.reviews.find({ media_id: ETERNAUTA }).sort({ created_at: -1 }).limit(10)],
+        () => db.reviews.find({ media_id: ETERNAUTA }).sort({ created_at: -1 })],
       ["5.4", "Mis reseñas", "reviews_por_usuario",
         () => db.reviews.find({ user_id: YO }).sort({ created_at: -1 })],
     ],
@@ -105,10 +109,12 @@ const COLECCIONES = [
       db.views.createIndex({ started_at: -1 }, { name: "views_por_fecha" });
     },
     consultas: [
+      ["—", "Todos los documentos (sin filtro)", "ninguno",
+        () => db.views.find()],
       ["1.3", "Top 10: reproducciones de la semana", "views_por_fecha",
         () => db.views.find({ started_at: { $gte: HACE_7_DIAS } })],
       ["2.3", "Última reproducción del usuario", "views_por_usuario",
-        () => db.views.find({ user_id: YO, media_id: ETERNAUTA }).sort({ started_at: -1 }).limit(1)],
+        () => db.views.find({ user_id: YO, media_id: ETERNAUTA }).sort({ started_at: -1 })],
       ["5.3", "Historial de un usuario", "views_por_usuario",
         () => db.views.find({ user_id: YO, started_at: { $gte: HACE_30_DIAS } }).sort({ started_at: -1 })],
     ],
